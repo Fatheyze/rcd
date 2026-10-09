@@ -353,31 +353,35 @@ function currentWeekIdx(){
 
 /* ---------- PRONOTE parser ---------- */
 function monthFrom(word){ const k = word.toLowerCase().replace(/\.$/,""); return MONTH_KEYS[k] || null; }
+/* Lecture souple de la liste PRONOTE : peu importe que les champs soient sur des lignes séparées,
+   séparés par des tabulations ou collés sur une même ligne. On découpe en blocs autour de chaque horaire. */
+const MONTH_RX = "(janv|févr|fevr|mars|avr|mai|juin|juil|août|aout|sept|oct|nov|déc|dec)[a-zéû]*\\.?";
+const TIME_RX = /(\d{1,2})\s*h\s*(\d{2})\s*(?:[-–—]|à|a)\s*(\d{1,2})\s*h\s*(\d{2})(?:\s*\(\s*\d+\s*h\s*\d{2}\s*\))?/gi;
 function parsePronote(text){
-  const lines = text.replace(/ /g," ").split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-  const out = []; let curDate = null; let cur = null;
-  const dateRe = /^(\d{1,2})\s*([a-zA-ZéûÉÛ]+)\.?$/;
-  const timeRe = /^(\d{1,2})h(\d{2})\s*[-–]\s*(\d{1,2})h(\d{2})/;
-  for (let i=0;i<lines.length;i++){
-    const L = lines[i];
-    let m = dateRe.exec(L);
-    if (m && monthFrom(m[2])) { curDate = mkDate(+m[1], monthFrom(m[2])); cur = null; continue; }
-    if (/^\d{1,2}$/.test(L) && lines[i+1] && /^[a-zA-ZéûÉÛ]+\.?$/.test(lines[i+1]) && monthFrom(lines[i+1])) { curDate = mkDate(+L, monthFrom(lines[i+1])); i++; cur = null; continue; }
-    m = timeRe.exec(L);
-    if (m) {
-      if (!curDate) { cur = null; continue; }
-      cur = {date:curDate, start:pad(+m[1])+"h"+m[2], end:pad(+m[3])+"h"+m[4], classe:"", matiere:"", prof:"", salle:"", statut:"", deja:false};
-      out.push(cur); continue;
-    }
-    if (!cur) continue;
-    if (/^salle\s*:/i.test(L)) { cur.salle = L.replace(/^salle\s*:\s*/i,""); continue; }
-    if (/^(ne plus|retirer|annuler|se désister)/i.test(L)) { cur.deja = true; continue; }
-    if (/^se porter volontaire/i.test(L)) continue;
-    if (/volontaire/i.test(L)) { if (!cur.statut) cur.statut = L; continue; }
-    const s = /^(.*?)\s*\(((?:M\.|Mme|MME|Mlle|M)\s.*)\)\s*$/.exec(L);
-    if (s && !cur.matiere) { cur.matiere = s[1].trim(); cur.prof = s[2].trim(); continue; }
-    if (!cur.classe && !cur.matiere && L.length <= 14) { cur.classe = L; continue; }
-  }
+  const T = text.replace(/[   ]/g," ").replace(/\r\n?/g,"\n").replace(/\t+/g,"\n");
+  const dates = []; const dRx = new RegExp("(?:^|[^\\d/])(\\d{1,2})\\s*(?:er)?\\s*\\n?\\s*" + MONTH_RX + "(?=$|[\\s,;)])", "gim");
+  let m; while ((m = dRx.exec(T))) { const mo = monthFrom(m[2]); if (mo) dates.push({i:m.index, date:mkDate(+m[1], mo)}); }
+  const times = []; TIME_RX.lastIndex = 0;
+  while ((m = TIME_RX.exec(T))) times.push({i:m.index, end:m.index+m[0].length, s:pad(+m[1])+"h"+m[2], e:pad(+m[3])+"h"+m[4]});
+  const out = [];
+  times.forEach((tm, k) => {
+    let d = null; for (const x of dates) { if (x.i <= tm.i) d = x; else break; }
+    if (!d) return;
+    // le bloc va jusqu'au prochain horaire, ou jusqu'à la date qui le précède
+    let stop = k+1 < times.length ? times[k+1].i : T.length;
+    const nd = dates.find(x => x.i > tm.end && x.i < stop); if (nd) stop = nd.i;
+    let rest = T.slice(tm.end, stop);
+    const o = {date:d.date, start:tm.s, end:tm.e, classe:"", matiere:"", prof:"", salle:"", statut:"", deja:false};
+    if (/ne plus être volontaire|retirer ma|se désister|vous êtes volontaire/i.test(rest)) o.deja = true;
+    const st = /(pas d'autre volontaire|\d+\s+autres?\s+volontaires?|vous êtes volontaire[^\n]*)/i.exec(rest); if (st) o.statut = st[1].trim();
+    rest = rest.replace(/se porter volontaire|ne plus être volontaire|retirer ma candidature|se désister/gi, "\n")
+               .replace(/pas d'autre volontaire|\d+\s+autres?\s+volontaires?|vous êtes volontaire[^\n]*/gi, "\n");
+    const sa = /salle\s*:\s*([^\n]*)/i.exec(rest); if (sa) { o.salle = sa[1].trim(); rest = rest.replace(sa[0], "\n"); }
+    const su = /(?:^|\n|\s)((?![3-6][A-Z][A-Z0-9]{0,8}\s)[A-ZÀ-Üa-zà-ü][^\n()]*?)\s*\(\s*((?:M\.|Mme|MME|Mlle|M)\s*[^()\n]*?)\s*\)/.exec(rest);
+    if (su) { o.matiere = su[1].trim(); o.prof = su[2].trim(); rest = rest.replace(su[0], "\n"); }
+    const cl = /(?:^|\s)([3-6][A-Z][A-Z0-9]{0,8})(?=\s|$)/.exec(rest); if (cl) o.classe = cl[1];
+    out.push(o);
+  });
   const seen = new Set();
   return out.filter(o => { const k=[o.date,o.start,o.classe,o.matiere].join("|"); if (seen.has(k)) return false; seen.add(k); return true; });
 }
@@ -701,7 +705,8 @@ function nextSchoolDays(n){
 function renderToday(all){
   const el = document.getElementById("today"); if (!el) return;
   const tomorrow = iso(new Date(parseIso(todayIso).getTime()+86400000));
-  el.innerHTML = nextSchoolDays(2).map(day => {
+  const days = nextSchoolDays(2);
+  el.innerHTML = days.map((day, idx) => {
     const fri = dow(day.date)===4;
     const chips = day.free.map(({si}) => {
       const n = all.filter(c => c.date===day.date && c.slots.includes(si) && (c.free||c.noted)).length;
@@ -710,7 +715,7 @@ function renderToday(all){
     }).join("");
     const mine = [...rcd.values()].filter(r => r.date===day.date && statutOf(r)!=="annule").sort((a,b)=>a.debut.localeCompare(b.debut));
     const rcdTxt = mine.length ? `<span class="note">RCD : ${mine.map(r=>`${esc(r.debut)} ${esc(r.classe||"?")}${r.salle?` (salle ${esc(r.salle)})`:""}${statutOf(r)==="attente"?" en attente":""}`).join(", ")}</span>` : "";
-    const label = day.isToday ? "Aujourd'hui" : day.date===tomorrow ? "Demain" : "Ensuite";
+    const label = day.isToday ? "Aujourd'hui" : day.date===tomorrow ? "Demain" : (idx===0 || (idx===1 && days[0].isToday)) ? "Prochain jour de cours" : "Ensuite";
     const libres = chips || (fri ? `<span class="note">vendredi, jour sans cours</span>` : `<span class="note">aucun créneau libre</span>`);
     return `<div class="day"><b>${label} · ${fmtShort(day.date)}</b>${libres}${rcdTxt}</div>`;
   }).join("");
@@ -878,7 +883,9 @@ function loadText(t, save){
   const info = document.getElementById("pasteInfo");
   if (offers.length){
     const dates = [...new Set(offers.map(o=>o.date))].sort();
-    info.textContent = `${offers.length} cours à pourvoir lus (${dates.length>1?fmtShort(dates[0])+" au "+fmtShort(dates.at(-1)):fmtShort(dates[0])}). Copie une nouvelle liste depuis PRONOTE et colle-la (Ctrl+V) pour mettre à jour.`;
+    const bad = offers.filter(o => !o.classe).length;
+    const now = new Date();
+    info.textContent = `${offers.length} cours à pourvoir lus (${dates.length>1?fmtShort(dates[0])+" au "+fmtShort(dates.at(-1)):fmtShort(dates[0])}), liste collée ${save ? "à "+pad(now.getHours())+"h"+pad(now.getMinutes()) : "précédemment"}.` + (bad ? ` Attention : ${bad} cours sans classe reconnue.` : "") + ` Copie une nouvelle liste depuis PRONOTE et colle-la (Ctrl+V) pour mettre à jour.`;
     const w = weekOf(offers[0].date); if (w) weekIdx = w.wi;
   } else if (t.trim()) {
     info.textContent = "Je n'ai reconnu aucun cours dans ce texte. Copie la liste depuis la page « Remplacements à pourvoir » : chaque cours doit contenir une date (08 oct.) et un horaire (08h40 - 09h40).";
@@ -890,12 +897,12 @@ document.addEventListener("paste", e => {
   const tgt = e.target;
   if (tgt && (tgt.tagName==="TEXTAREA" || tgt.tagName==="INPUT")) return;
   const t = e.clipboardData && e.clipboardData.getData("text");
-  if (t && /\d{1,2}h\d{2}\s*[-–]\s*\d{1,2}h\d{2}/.test(t)) { e.preventDefault(); loadText(t, true); switchTab("offers"); }
+  if (t && /\d{1,2}\s*h\s*\d{2}/i.test(t)) { e.preventDefault(); loadText(t, true); switchTab("offers"); }
 });
 document.getElementById("btnEdit").onclick = () => { const box=document.getElementById("pasteBox"); box.hidden=false; const a=document.getElementById("pasteArea"); a.value=""; a.focus(); };
 document.getElementById("btnCancel").onclick = () => { document.getElementById("pasteBox").hidden = true; };
 document.getElementById("btnAnalyse").onclick = () => { const t=document.getElementById("pasteArea").value; if (!t.trim()) return; document.getElementById("pasteBox").hidden = true; loadText(t, true); };
-document.getElementById("pasteArea").addEventListener("paste", () => setTimeout(()=>{ const t=document.getElementById("pasteArea").value; if (/\d{1,2}h\d{2}/.test(t)){ document.getElementById("pasteBox").hidden = true; loadText(t, true); } }, 0));
+document.getElementById("pasteArea").addEventListener("paste", () => setTimeout(()=>{ const t=document.getElementById("pasteArea").value; if (/\d{1,2}\s*h\s*\d{2}/i.test(t)){ document.getElementById("pasteBox").hidden = true; loadText(t, true); } }, 0));
 
 document.addEventListener("keydown", e => {
   if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || document.getElementById("pOffers").hidden) return;
