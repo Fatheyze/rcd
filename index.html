@@ -111,6 +111,11 @@ button{cursor:pointer}
 .help{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px 14px;margin-bottom:12px}
 .help summary{cursor:pointer;font-weight:700}
 .help ol{margin:8px 0 4px;padding-left:20px;display:grid;gap:6px;max-width:80ch}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:80;background:var(--accent);color:var(--accent-ink);font-weight:700;border-radius:999px;padding:10px 18px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:calc(100% - 32px);text-align:center}
+.flash{animation:flash 1.6s ease}
+@keyframes flash{0%,40%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+.paste-at{font-weight:700;color:var(--ink)!important;margin:0 0 2px!important}
+.paste-at.stale{color:var(--warn)!important}
 .banner{border-radius:8px;padding:8px 12px;font-size:14px;background:var(--warn-soft);color:var(--warn)}
 
 /* summary */
@@ -253,6 +258,7 @@ details.more>summary{cursor:pointer;font-family:var(--f-display);font-weight:600
       <div class="paste-head">
         <div>
           <h2>Liste PRONOTE</h2>
+          <p id="pasteAt" class="paste-at"></p>
           <p id="pasteInfo">Emploi du temps › Remplacements › Remplacements à pourvoir : décoche « Uniquement les cours qui me concernent », sélectionne la liste, copie, puis colle ici (ou Ctrl+V n'importe où sur la page).</p>
         </div>
         <div class="row">
@@ -265,7 +271,7 @@ details.more>summary{cursor:pointer;font-family:var(--f-display);font-weight:600
         <p class="note" id="icsMsg" aria-live="polite"></p>
       </div>
       <div id="pasteBox" hidden>
-        <textarea id="pasteArea" placeholder="08 oct.&#10;08h40 - 09h40 (1h00)&#10;6C&#10;Se porter volontaire&#10;ANGLAIS LV1 (Mme DUPONT A.)&#10;Salle : 201&#10;Pas d'autre volontaire"></textarea>
+        <textarea id="pasteArea" placeholder="Colle ici la liste copiée dans PRONOTE (Cmd+V ou Ctrl+V). La page la lit aussitôt et ce cadre se referme."></textarea>
         <div class="row" style="margin-top:8px"><button class="btn primary" id="btnAnalyse">Analyser</button><button class="btn ghost" id="btnCancel">Annuler</button></div>
       </div>
     </div>
@@ -877,6 +883,13 @@ function write(coll, id, data){
 function showBanner(t){ const b=document.getElementById("dbBanner"); b.textContent=t; b.hidden=false; }
 
 /* ---------- events ---------- */
+let toastTimer = null;
+function showToast(msg){
+  let el = document.getElementById("toast");
+  if (!el){ el = document.createElement("div"); el.id = "toast"; el.className = "toast"; el.setAttribute("role","status"); document.body.appendChild(el); }
+  el.textContent = msg; el.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 5000);
+}
 function loadText(t, save){
   offers = parsePronote(t);
   filterSlot = null; selCell = null;
@@ -884,14 +897,31 @@ function loadText(t, save){
   if (offers.length){
     const dates = [...new Set(offers.map(o=>o.date))].sort();
     const bad = offers.filter(o => !o.classe).length;
-    const now = new Date();
-    info.textContent = `${offers.length} cours à pourvoir lus (${dates.length>1?fmtShort(dates[0])+" au "+fmtShort(dates.at(-1)):fmtShort(dates[0])}), liste collée ${save ? "à "+pad(now.getHours())+"h"+pad(now.getMinutes()) : "précédemment"}.` + (bad ? ` Attention : ${bad} cours sans classe reconnue.` : "") + ` Copie une nouvelle liste depuis PRONOTE et colle-la (Ctrl+V) pour mettre à jour.`;
+    let at = null;
+    if (save) { at = new Date(); try { localStorage.setItem("rcd-paste-at", at.toISOString()); } catch(e){} }
+    else { try { const s = localStorage.getItem("rcd-paste-at"); if (s) at = new Date(s); } catch(e){} }
+    info.textContent = `${offers.length} cours à pourvoir lus (${dates.length>1?fmtShort(dates[0])+" au "+fmtShort(dates.at(-1)):fmtShort(dates[0])}).` + (bad ? ` Attention : ${bad} cours sans classe reconnue.` : "");
+    const pa = document.getElementById("pasteAt");
+    if (pa) {
+      if (at && !isNaN(at)) {
+        const days = Math.floor((new Date(new Date().toDateString()) - new Date(at.toDateString())) / 86400000);
+        const age = days<=0 ? "aujourd'hui" : days===1 ? "hier" : `il y a ${days} jours`;
+        pa.textContent = `Dernière liste PRONOTE collée le ${at.toLocaleDateString("fr-FR")} à ${pad(at.getHours())}h${pad(at.getMinutes())} (${age}). Copie une nouvelle liste depuis PRONOTE et colle-la (Cmd+V ou Ctrl+V) pour mettre à jour.`;
+        pa.classList.toggle("stale", days >= 2);
+      } else pa.textContent = "Date du dernier collage inconnue : colle une nouvelle liste pour la mettre à jour.";
+    }
     const w = weekOf(offers[0].date); if (w) weekIdx = w.wi;
   } else if (t.trim()) {
     info.textContent = "Je n'ai reconnu aucun cours dans ce texte. Copie la liste depuis la page « Remplacements à pourvoir » : chaque cours doit contenir une date (08 oct.) et un horaire (08h40 - 09h40).";
   }
   if (save) { try{ localStorage.setItem("rcd-paste", t); }catch(e){} }
   render();
+  if (save) {
+    const all = offers.map(o => classify(o));
+    const libres = all.filter(c => c.free).length, mesLibres = all.filter(c => c.free && isMine(c.classe)).length;
+    showToast(offers.length ? `✓ Nouvelle liste lue : ${offers.length} cours, dont ${libres} sur tes créneaux libres${mesLibres ? ` (${mesLibres} dans tes classes)` : ""}.` : "Aucun cours reconnu dans ce que tu as collé.");
+    const sm = document.getElementById("summary"); sm.classList.remove("flash"); void sm.offsetWidth; sm.classList.add("flash");
+  }
 }
 document.addEventListener("paste", e => {
   const tgt = e.target;
