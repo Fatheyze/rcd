@@ -4,1287 +4,895 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>RCD Pagnol</title>
+<title>QR Codes Zeghoudi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
 <style>
-/* Layout: a teacher's working sheet — paste strip on top, sorted offers on the left, the week grid (PRONOTE colours) pinned on the right. */
+/* Mise en page : comme « La Roue Tourne » — casiers à gauche, atelier + collection à droite, fond nuit violette avec symboles maths. */
 :root{
-  --bg:#eef2ef; --surface:#ffffff; --surface-2:#f6f8f6; --ink:#16231e; --muted:#5a6a63; --line:#d5ddd8;
-  --accent:#1d6b58; --accent-ink:#ffffff; --accent-soft:#dcefe8;
-  --cours:#f5efc4; --cours-ink:#5f520c; --libre:#cfe8c9; --libre-ink:#1f5f2a; --vend:#e8f2e4;
-  --rcd:#d3e2f8; --rcd-ink:#1a4a8c; --ferme:#e2e6e3; --ferme-ink:#77837d;
-  --warn:#a5480f; --warn-soft:#fbe7d8; --danger:#a3262a; --danger-soft:#f9dcdc;
-  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
-  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
-  --r:10px;
+  --bg1:#1a0f38; --bg2:#2b1557; --side:#22133f; --panel:#2a1a4d; --panel2:#33205c; --line:#4a3577;
+  --ink:#f6f1ff; --muted:#b9a8dc; --gold:#f3c34f; --gold-ink:#3a2500; --pink:#ec4f9a; --pink2:#d63a86;
+  --qr-ink:#1d1140;
+  --l6:#4f86f7; --l5:#2fbf86; --l4:#f07a32; --l3:#e94e8a;
+  --f-display:"Fredoka", "Nunito", "Trebuchet MS", system-ui, sans-serif;
+  --f-body:"Nunito", "Segoe UI", system-ui, sans-serif;
+  color-scheme:dark;
 }
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#101814; --surface:#172119; --surface-2:#1c2820; --ink:#e3ece7; --muted:#9aaba3; --line:#2c3a33;
-  --accent:#5cc3a4; --accent-ink:#0d1a15; --accent-soft:#1c3a31;
-  --cours:#3a3618; --cours-ink:#e9dc8c; --libre:#1f3d24; --libre-ink:#a9e0b0; --vend:#1a2c1d;
-  --rcd:#1d3150; --rcd-ink:#a9c8f5; --ferme:#232c27; --ferme-ink:#7e8c85;
-  --warn:#f0a26e; --warn-soft:#3b2616; --danger:#f08a8d; --danger-soft:#3d1a1c; color-scheme:dark }}
-:root[data-theme="dark"]{
-  --bg:#101814; --surface:#172119; --surface-2:#1c2820; --ink:#e3ece7; --muted:#9aaba3; --line:#2c3a33;
-  --accent:#5cc3a4; --accent-ink:#0d1a15; --accent-soft:#1c3a31;
-  --cours:#3a3618; --cours-ink:#e9dc8c; --libre:#1f3d24; --libre-ink:#a9e0b0; --vend:#1a2c1d;
-  --rcd:#1d3150; --rcd-ink:#a9c8f5; --ferme:#232c27; --ferme-ink:#7e8c85;
-  --warn:#f0a26e; --warn-soft:#3b2616; --danger:#f08a8d; --danger-soft:#3d1a1c; color-scheme:dark }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html{color-scheme:light}
-body{margin:0}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
-.wrap{max-width:1240px;margin:0 auto;padding-inline:20px;padding-block:18px 48px}
-button,input,select,textarea{font:inherit;color:inherit}
+html{background:var(--bg1)}
+html,body{margin:0;min-height:100%}
+body{background:radial-gradient(1200px 700px at 70% 40%, var(--bg2), var(--bg1));background-attachment:fixed;color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
+button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.deco{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.deco span{position:absolute;font-family:var(--f-display);font-weight:700;color:#fff;opacity:.05;transform:rotate(var(--r))}
+.app{position:relative;z-index:1;display:grid;grid-template-columns:270px minmax(0,1fr);min-height:100vh}
+@media (max-width:860px){.app{grid-template-columns:minmax(0,1fr)}}
 
-/* header */
-.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 28px;padding-bottom:16px;border-bottom:1px solid var(--line)}
-.top h1{font-family:var(--f-display);font-weight:800;font-size:clamp(26px,4vw,34px);letter-spacing:-.02em;margin:0;line-height:1.05}
-.top .who{color:var(--muted);margin:6px 0 0}
-.mine-chips{display:inline-flex;gap:4px;flex-wrap:wrap;vertical-align:middle}
-.cls{display:inline-block;font-family:var(--f-mono);font-weight:600;font-size:13px;padding:1px 7px;border-radius:6px;border:1px solid var(--line);background:var(--surface-2)}
-.cls.me{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.pacte{min-width:min(320px,100%);flex:0 1 340px}
-.pacte .lbl{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
-.pacte .lbl>span:last-child{white-space:nowrap}
-.pacte .lbl b{color:var(--ink);font-family:var(--f-mono);font-size:15px}
-.meter{display:flex;height:12px;border-radius:6px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;margin-top:6px}
-.meter span{display:block;height:100%}
-.meter .m-done{background:var(--accent)}
-.meter .m-next{background:repeating-linear-gradient(135deg,var(--accent) 0 4px,var(--accent-soft) 4px 8px)}
-.meter .m-wait{background:var(--accent-soft)}
-.legend-mini{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:6px}
-.meter{position:relative}
-.meter .m-mark{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.6}
-.pacte .lbl .done-lbl{font-size:12px;color:var(--muted);font-family:var(--f-body);font-weight:400}
-.pacte-status{margin-top:6px;font-size:13.5px;font-weight:700;color:var(--ink)}
-.pacte-status.ok{color:var(--accent)}
-.pacte-next{font-size:13px;color:var(--muted);margin-top:2px}
-.pacte.complete .meter{border-color:var(--accent)}
-.cap{font:inherit;font-size:12px;font-weight:700;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:1px 9px;margin-left:6px;vertical-align:1px}
-.cap-expl{margin-top:6px;font-size:12.5px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 9px}
-.st.annule{background:var(--ferme);color:var(--ferme-ink);text-decoration:line-through}
-.st.verif{background:var(--warn-soft);color:var(--warn)}
-.rline.cancel{opacity:.55}
-.bilan{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:16px;display:grid;gap:8px}
-.bilan h3{margin:0;font-family:var(--f-display);font-weight:600;font-size:16px}
-.bilan .chips{display:flex;flex-wrap:wrap;gap:6px}
-.bilan .chips span{font-size:13px}
-.legend-mini i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+/* casiers */
+.side{background:var(--side);border-right:1px solid var(--line);padding:18px 16px;display:flex;flex-direction:column;gap:14px;position:sticky;top:0;height:100vh;overflow-y:auto}
+@media (max-width:860px){.side{border-right:0;border-bottom:1px solid var(--line);position:static;height:auto}}
+.brand{display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.brand .logo{width:38px;height:38px;border-radius:50%;background:var(--gold);color:var(--gold-ink);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:22px;box-shadow:0 0 18px rgba(243,195,79,.45)}
+.brand h1{margin:0;font-family:var(--f-display);font-weight:700;font-size:21px;color:var(--gold);line-height:1.1}
+.brand small{display:block;color:var(--muted);font-size:12.5px;font-weight:600}
+.casiers{display:grid;gap:8px}
+@media (max-width:860px){.casiers{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.casier{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:11px 12px;font-weight:800;text-align:left}
+.casier .dot{width:12px;height:12px;border-radius:3px;background:var(--c);display:inline-block;margin-right:8px;vertical-align:-1px}
+.casier .n{font-size:12px;color:var(--muted);font-weight:700}
+.casier[aria-pressed="true"]{background:var(--c,var(--pink));border-color:var(--gold);box-shadow:0 0 0 2px rgba(243,195,79,.35)}
+.casier[aria-pressed="true"] .n{color:#fff}
+.casier[aria-pressed="true"] .dot{background:#fff}
+@media (max-width:860px){.casier{flex-direction:column;align-items:flex-start;padding:8px}}
+.side .lbl{font-size:13px;color:var(--muted);font-weight:700;margin:0}
+.side input[type=search]{width:100%;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:9px 11px}
+.side .tools{display:grid;gap:8px;margin-top:auto}
+@media (max-width:860px){.side .tools{margin-top:0;grid-template-columns:1fr 1fr}}
+.pill{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:8px 14px;font-weight:700;font-size:14px;text-align:center}
+.pill:hover{border-color:var(--gold)}
 
-/* tabs */
-.tabs{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:18px 0 14px}
-.tabs .dl{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.tab{border:1px solid var(--line);background:var(--surface);padding:7px 14px;border-radius:999px;font-weight:700}
-.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.tab .n{font-family:var(--f-mono);font-weight:500;opacity:.75;margin-left:4px}
+/* zone principale */
+.main{padding:22px clamp(16px,3vw,34px) 60px;display:grid;gap:22px;align-content:start;min-width:0}
+.atelier{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,340px);gap:22px;background:rgba(42,26,77,.75);border:1px solid var(--line);border-radius:18px;padding:20px;backdrop-filter:blur(4px)}
+@media (max-width:1020px){.atelier{grid-template-columns:minmax(0,1fr)}}
+/* grand écran paysage : atelier à gauche (fixe), casier affiché à droite, sauvegarde en bas */
+@media (min-width:1200px){
+  .main{grid-template-columns:minmax(360px,430px) minmax(0,1fr);grid-template-areas:"help help" "banner banner" "atelier coll" "save save";align-items:start}
+  #banner{grid-area:banner}
+  .help{grid-area:help}
+  .atelier{grid-area:atelier;grid-template-columns:minmax(0,1fr);position:sticky;top:16px;max-height:calc(100vh - 32px);overflow-y:auto}
+  .atelier .preview .card{max-width:235px;justify-self:center;width:100%}
+  .atelier .preview .card .qrlink{max-width:170px}
+  .atelier .sub{display:none}
+  .atelier .form{gap:11px}
+  .atelier .preview .placeholder{min-height:220px}
+  .coll{grid-area:coll;min-width:0}
+  .save{grid-area:save}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+}
+.atelier h2{margin:0 0 4px;font-family:var(--f-display);font-size:24px;color:var(--gold)}
+.atelier .sub{margin:0 0 14px;color:var(--muted)}
+.form{display:grid;gap:14px;align-content:start}
+.field{display:grid;gap:6px}
+.field>span{font-weight:800;font-size:14px}
+.field input{border:2px solid var(--line);background:var(--bg1);border-radius:12px;padding:11px 13px;font-size:16px;min-width:0;width:100%}
+.field input:focus{border-color:var(--gold);outline:none}
+.field .err{color:#ffb3c9;font-size:13px;font-weight:700}
+.niveaux{display:flex;gap:8px;flex-wrap:wrap}
+.niv{border:2px solid var(--c);background:transparent;color:var(--ink);border-radius:12px;padding:9px 18px;font-family:var(--f-display);font-weight:700;font-size:18px}
+.niv[aria-pressed="true"]{background:var(--c);box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn-main{background:linear-gradient(180deg,var(--pink),var(--pink2));border:0;border-radius:999px;padding:13px 26px;font-family:var(--f-display);font-weight:700;font-size:19px;box-shadow:0 6px 22px rgba(236,79,154,.45)}
+.btn-main:disabled{opacity:.45;box-shadow:none;cursor:default}
+.btn-sec{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:10px 18px;font-weight:700}
+.msg{font-weight:700;color:var(--gold);min-height:1.2em;margin:0}
 
-/* paste */
-.paste{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:10px}
-.paste-head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
-.paste-head h2{font-family:var(--f-display);font-size:18px;margin:0;font-weight:600}
-.paste-head p{margin:0;color:var(--muted);font-size:14px}
-.paste textarea{width:100%;min-height:120px;resize:vertical;border:1px dashed var(--line);border-radius:8px;background:var(--surface-2);padding:10px;font-family:var(--f-mono);font-size:12.5px}
-.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;font-weight:700;font-size:14px}
-.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.btn.ghost{background:transparent}
-.btn.small{padding:4px 9px;font-size:13px}
-.btn.danger{color:var(--danger)}
+/* carte QR */
+.card{--c:var(--l6);background:#fff;color:#1d1140;border-radius:20px;padding:14px 14px 16px;display:grid;gap:8px;justify-items:center;text-align:center;border:6px solid var(--c);box-shadow:0 10px 30px rgba(0,0,0,.35);position:relative;min-width:0}
+.card .head{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card .prof{font-family:var(--f-display);font-weight:700;font-size:14px;color:var(--c);text-align:left;line-height:1.1}
+.card .badge{background:var(--c);color:#fff;font-family:var(--f-display);font-weight:700;border-radius:10px;padding:2px 10px;font-size:18px;white-space:nowrap}
+.card .theme{font-family:var(--f-display);font-weight:700;font-size:20px;line-height:1.15;overflow-wrap:anywhere}
+.card .titre{font-size:14px;font-weight:700;color:#4a3d70;overflow-wrap:anywhere}
+.card .qrlink{display:block;width:100%;max-width:240px;border-radius:12px;line-height:0}
+.card .qrlink svg{width:100%;height:auto;display:block}
+.card .scan{font-family:var(--f-display);font-weight:600;font-size:13px;color:var(--c)}
+.card .host{font-size:11px;color:#7a6e98;overflow-wrap:anywhere}
+.preview{display:grid;gap:10px;align-content:start}
+.preview .placeholder{border:2px dashed var(--line);border-radius:20px;min-height:330px;display:grid;place-items:center;color:var(--muted);text-align:center;padding:20px;font-weight:700}
+
+/* collection */
+.coll-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px}
+.coll-head h2{margin:0;font-family:var(--f-display);font-size:26px}
+.coll-head h2 .chip{background:var(--c);border-radius:10px;padding:0 10px;margin-left:6px;font-size:22px}
+.theme-group{display:grid;gap:12px}
+.theme-group h3{margin:6px 0 0;font-family:var(--f-display);font-weight:600;font-size:19px;color:var(--gold);display:flex;align-items:center;gap:8px}
+.theme-group h3 small{color:var(--muted);font-family:var(--f-body);font-size:13px;font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.item{display:grid;gap:8px;align-content:start;min-width:0}
+.item .card .qrlink{max-width:180px}
+.item .tools{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.mini{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:700}
+.mini:hover{border-color:var(--gold)}
+.mini.danger{color:#ffb3c9}
+.help{background:rgba(42,26,77,.75);border:1px solid var(--line);border-radius:14px;padding:10px 16px}
+.help summary{cursor:pointer;font-family:var(--f-display);font-weight:600;font-size:18px;color:var(--gold)}
+.help ol{margin:10px 0 4px;padding-left:22px;display:grid;gap:8px;max-width:95ch}
+.help li b{color:var(--gold)}
+.empty{border:2px dashed var(--line);border-radius:16px;padding:22px;color:var(--muted);font-weight:700;text-align:center}
+.banner{background:rgba(243,195,79,.14);border:1px solid var(--gold);color:var(--ink);border-radius:12px;padding:10px 14px;font-weight:700;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* projection */
+.proj{position:fixed;inset:0;z-index:50;background:radial-gradient(900px 600px at 50% 45%, var(--bg2), var(--bg1));display:grid;place-items:center;padding:24px}
+.proj .card{width:min(92vw,78vh);max-width:none;padding:22px}
+.proj .card .qrlink{max-width:none}
+.proj .card .theme{font-size:clamp(24px,4vh,44px)}
+.proj .card .titre{font-size:clamp(16px,2.4vh,26px)}
+.proj .card .prof{font-size:clamp(16px,2.4vh,24px)}
+.proj .card .badge{font-size:clamp(20px,3vh,32px)}
+.proj .close{position:absolute;top:16px;right:16px}
+
+/* sauvegarde */
+.save{background:rgba(42,26,77,.75);border:1px solid var(--line);border-radius:18px;padding:16px 20px;display:grid;gap:8px}
+.save h2{margin:0;font-family:var(--f-display);font-size:20px;color:var(--gold)}
+.save p{margin:0;color:var(--muted)}
+.save .state{color:var(--ink);font-weight:700}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.note{font-size:13px;color:var(--muted)}
-.ics-row{display:grid;gap:6px;border-top:1px dashed var(--line);padding-top:10px}
-.ics-row p{margin:0}
-.ics-row label.btn{cursor:pointer}
-.cell .ag{display:block;font-size:10px;font-style:italic;opacity:.85;overflow-wrap:anywhere}
-.today{display:grid;gap:6px;margin-top:14px}
-.today .day{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px 12px;font-size:14px}
-.today .day b{min-width:150px}
-.today .chip{font-family:var(--f-mono);font-size:12.5px;border:1px solid var(--libre-ink);color:var(--libre-ink);background:var(--libre);border-radius:999px;padding:1px 9px}
-.today .chip.has{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.help{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px 14px;margin-bottom:12px}
-.help summary{cursor:pointer;font-weight:700}
-.help ol{margin:8px 0 4px;padding-left:20px;display:grid;gap:6px;max-width:80ch}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:80;background:var(--accent);color:var(--accent-ink);font-weight:700;border-radius:999px;padding:10px 18px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:calc(100% - 32px);text-align:center}
-.flash{animation:flash 1.6s ease}
-@keyframes flash{0%,40%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
-.paste-at{font-weight:700;color:var(--ink)!important;margin:0 0 2px!important;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
-.fresh{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 11px;font-size:13px;font-weight:800;white-space:nowrap}
-.fresh::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}
-.fresh.ok{background:var(--libre);color:var(--libre-ink)}
-.fresh.mid{background:var(--warn-soft);color:var(--warn)}
-.fresh.old{background:var(--danger-soft);color:var(--danger)}
-.fresh.none{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
-#icsInfo.ics-old{color:var(--warn)!important}
-.banner{border-radius:8px;padding:8px 12px;font-size:14px;background:var(--warn-soft);color:var(--warn)}
 
-/* summary */
-.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}
-.sum{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;text-align:left;display:grid;gap:2px;border-left-width:4px}
-.sum b{font-family:var(--f-mono);font-size:24px;line-height:1}
-.sum span{font-size:13px;color:var(--muted)}
-.sum.s1{border-left-color:var(--accent)} .sum.s2{border-left-color:var(--libre-ink)} .sum.s3{border-left-color:var(--warn)} .sum.s4{border-left-color:var(--ferme-ink)}
-@media (max-width:640px){.summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (prefers-reduced-motion:no-preference){
+  .card.pop{animation:pop .35s ease}
+  @keyframes pop{from{transform:scale(.92) rotate(-2deg);opacity:.4}to{transform:none;opacity:1}}
+}
 
-/* main layout */
-.main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,520px);gap:18px;align-items:start}
-@media (max-width:1000px){.main{grid-template-columns:minmax(0,1fr)}.side{order:-1}}
-.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 10px);max-height:calc(100vh - 20px);overflow-y:auto}
-.state-ok{color:var(--libre-ink);font-weight:700}.state-rcd{color:var(--rcd-ink);font-weight:700}.state-bad{color:var(--warn);font-weight:700}
-.slotpanel .slot{margin:0}
-.cell:hover{box-shadow:inset 0 0 0 2px currentColor}
-@media (max-width:1000px){.side{position:static}}
+/* fenêtre « Imprimer » */
+.modal{position:fixed;inset:0;z-index:60;background:rgba(10,5,25,.7);display:grid;place-items:center;padding:16px}
+.modal .box{background:var(--panel);border:1px solid var(--gold);border-radius:18px;padding:20px;width:min(460px,100%);display:grid;gap:14px}
+.modal h2{margin:0;font-family:var(--f-display);color:var(--gold);font-size:22px}
+.modal p{margin:0;color:var(--muted)}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.opt small{font-weight:700;color:var(--muted);font-size:11px;line-height:1.1;text-align:center}
+.lab-note{font-size:13px;color:var(--gold)!important;font-weight:700}
+.opt{border:2px solid var(--line);background:var(--bg1);border-radius:12px;padding:10px 6px;display:grid;gap:6px;justify-items:center;font-weight:800}
+.opt[aria-pressed="true"]{border-color:var(--gold);background:var(--panel2)}
+.opt .mini-sheet{width:34px;height:46px;background:#fff;border-radius:3px;display:grid;gap:2px;padding:3px}
+.opt .mini-sheet i{background:var(--pink);border-radius:1px;display:block}
+.check{display:flex;gap:8px;align-items:flex-start;font-weight:700}
+#printArea{display:none}
 
-/* lists */
-.group{margin-bottom:18px}
-.group>h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
-.group>h3 .cnt{font-family:var(--f-mono);font-size:13px;font-weight:500;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:0 8px}
-.group>.hint{margin:0 0 8px;font-size:13px;color:var(--muted)}
-.slot{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-bottom:8px;overflow:hidden}
-.slot-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;align-items:center;padding:7px 12px;background:var(--surface-2);border-bottom:1px solid var(--line);font-size:13px}
-.slot-h .when{font-family:var(--f-mono);font-weight:600;font-size:14px;background:none;border:0;padding:0;text-align:left;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
-.slot-h .state{color:var(--muted)}
-.slot-h .state.ok{color:var(--libre-ink);font-weight:700}
-.slot-h .state.bad{color:var(--warn);font-weight:700}
-.offer{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:9px 12px;border-top:1px solid var(--line)}
-.slot-h + .offer{border-top:0}
-.offer .what{min-width:0}
-.offer .subj{font-weight:700}
-.offer .meta{font-size:13px;color:var(--muted)}
-.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:0 6px;border-radius:4px;margin-left:4px;vertical-align:1px;letter-spacing:.02em}
-.tag.math{background:var(--accent-soft);color:var(--accent)}
-.tag.other{background:var(--warn-soft);color:var(--warn)}
-.tag.done{background:var(--rcd);color:var(--rcd-ink)}
-.offer .act{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-@media (max-width:560px){.offer{grid-template-columns:auto minmax(0,1fr)}.offer .act{grid-column:1/-1;justify-content:flex-start}}
-.empty{border:1px dashed var(--line);border-radius:var(--r);padding:14px;color:var(--muted);font-size:14px;background:var(--surface)}
-details.more>summary{cursor:pointer;font-family:var(--f-display);font-weight:600;font-size:16px;padding:6px 0;list-style-position:outside}
-.filter{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--accent-soft);color:var(--ink);border-radius:8px;padding:6px 10px;margin-bottom:12px;font-size:14px}
-
-/* week grid */
-.week{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px}
-.week-h{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-.week-h h2{font-family:var(--f-display);font-size:18px;margin:0;font-weight:600}
-.week-h .q{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
-.wk-tabs{display:flex;gap:4px;flex-wrap:wrap}
-.wk-nav{display:flex;align-items:center;gap:10px}
-.btn.arrow{font-size:20px;line-height:1;width:36px;height:36px;padding:0;display:grid;place-items:center}
-.btn[disabled]{opacity:.35;cursor:default}
-.grid-scroll{overflow-x:auto}
-.grid{display:grid;grid-template-columns:44px repeat(5,minmax(78px,1fr));gap:2px;min-width:470px;font-size:12px}
-.grid .dh{text-align:center;font-weight:700;padding:2px 0 4px;font-size:12.5px}
-.grid .th{font-family:var(--f-mono);font-size:11px;color:var(--muted);text-align:right;padding-right:4px;line-height:1.1}
-.grid .pause{grid-column:2/-1;height:6px;background:repeating-linear-gradient(90deg,var(--line) 0 6px,transparent 6px 10px);opacity:.6;border-radius:2px}
-.cell{position:relative;min-height:50px;border-radius:5px;border:1px solid transparent;padding:4px 5px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;gap:2px;line-height:1.15;background:var(--ferme)}
-.cell .lab{font-weight:700;overflow-wrap:anywhere}
-.cell .sub{font-size:10.5px;opacity:.85}
-.c-cours{background:var(--cours);color:var(--cours-ink)}
-.c-libre{background:var(--libre);color:var(--libre-ink)}
-.c-vend{background:var(--vend);color:var(--libre-ink)}
-.c-rcd{background:var(--rcd);color:var(--rcd-ink)}
-.c-ferme{background:repeating-linear-gradient(135deg,var(--ferme) 0 5px,transparent 5px 9px),var(--surface-2);color:var(--ferme-ink)}
-.c-ferie{background:var(--ferme);color:var(--ferme-ink)}
-.c-ovl{box-shadow:inset 0 0 0 2px var(--libre-ink)}
-.c-ovo{background:repeating-linear-gradient(135deg,var(--warn-soft) 0 6px,var(--cours) 6px 12px);color:var(--warn)}
-.cell.sel{outline:2px solid var(--ink);outline-offset:1px}
-.cell .badges{display:flex;gap:3px;flex-wrap:wrap}
-.bdg{font-family:var(--f-mono);font-size:10.5px;font-weight:600;border-radius:4px;padding:0 4px;background:var(--surface);color:var(--ink);border:1px solid var(--line)}
-.bdg.me{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.grid-legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-size:12px;color:var(--muted)}
-.grid-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-2px;border:1px solid var(--line)}
-.slotpanel{margin-top:10px;border-top:1px solid var(--line);padding-top:10px;display:grid;gap:8px;font-size:14px}
-.slotpanel h4{margin:0;font-family:var(--f-display);font-weight:600;font-size:15px}
-.slotpanel input{border:1px solid var(--line);border-radius:6px;padding:5px 8px;background:var(--surface-2);min-width:0;flex:1 1 180px}
-
-/* mes RCD */
-.rcd-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,340px);gap:18px;align-items:start}
-@media (max-width:900px){.rcd-grid{grid-template-columns:minmax(0,1fr)}}
-.month{margin-bottom:16px}
-.month h3{font-family:var(--f-display);font-weight:600;font-size:16px;margin:0 0 6px}
-.rline{display:grid;grid-template-columns:118px minmax(0,1fr) auto;gap:4px 12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-bottom:6px}
-.rline.past{opacity:.78}
-.rline .d{font-family:var(--f-mono);font-size:13px;font-weight:600}
-.rline .x{font-size:13px;color:var(--muted)}
-.rline select{border:1px solid var(--line);border-radius:6px;padding:3px 6px;background:var(--surface-2);font-size:13px}
-@media (max-width:560px){.rline{grid-template-columns:minmax(0,1fr)}}
-.st{font-size:12px;font-weight:700;border-radius:4px;padding:1px 6px}
-.st.confirme{background:var(--rcd);color:var(--rcd-ink)}
-.st.attente{background:var(--warn-soft);color:var(--warn)}
-.st.fait{background:var(--accent-soft);color:var(--accent)}
-.addform{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:grid;gap:10px}
-.addform h3{margin:0;font-family:var(--f-display);font-weight:600;font-size:16px}
-.addform label{display:grid;gap:3px;font-size:13px;color:var(--muted)}
-.addform input,.addform select{border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--surface-2);color:var(--ink);min-width:0;width:100%}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-@media (prefers-reduced-motion:no-preference){.cell,.btn,.tab{transition:background-color .15s,box-shadow .15s}}
+/* impression : planches A4 */
+@media print{
+  @page{size:A4 portrait;margin:0}
+  html,body{background:#fff!important}
+  body>*:not(#printArea){display:none!important}
+  #printArea{display:block}
+  .sheet{width:210mm;height:296mm;padding:8mm;box-sizing:border-box;display:grid;gap:0;break-after:page;page-break-after:always;overflow:hidden}
+  .sheet.lab{display:block;position:relative;padding:0}
+  .sheet.lab .lcell{position:absolute;box-sizing:border-box;padding:1.6mm 2mm;display:flex}
+  .sheet.lab .pc{border-width:.6mm;border-radius:2.5mm;padding:1.2mm 1.6mm;gap:2mm}
+  .sheet.lab .pc .q{width:27mm;height:27mm}
+  .sheet.lab .pc .prof{font-size:2.5mm}
+  .sheet.lab .pc .badge{font-size:3.4mm;padding:0 1.6mm;border-radius:1.4mm}
+  .sheet.lab .pc .theme{font-size:3.6mm}
+  .sheet.lab .pc .titre{font-size:2.5mm}
+  .sheet.lab .pc .scan,.sheet.lab .pc .host{display:none}
+  .sheet.l24 .pc .q{width:28mm;height:28mm}
+  .sheet:last-child{break-after:auto;page-break-after:auto}
+  .cell{border:0.3mm dashed #b8b0cc;padding:3mm;display:flex;align-items:stretch;justify-content:stretch;overflow:hidden}
+  .pc{--c:#4f86f7;flex:1;border:1.2mm solid var(--c);border-radius:4mm;background:#fff;color:#1d1140;display:flex;gap:3mm;align-items:center;padding:2.5mm;font-family:var(--f-body);-webkit-print-color-adjust:exact;print-color-adjust:exact;min-width:0}
+  .pc .q{flex:none;line-height:0}
+  .pc .q svg{width:100%;height:100%}
+  .pc .t{display:flex;flex-direction:column;gap:1.2mm;min-width:0}
+  .pc .prof{font-family:var(--f-display);font-weight:700;color:var(--c);font-size:3.4mm}
+  .pc .badge{align-self:flex-start;background:var(--c);color:#fff;font-family:var(--f-display);font-weight:700;border-radius:2mm;padding:0 2.4mm;font-size:4.6mm}
+  .pc .theme{font-family:var(--f-display);font-weight:700;font-size:5mm;line-height:1.1;overflow-wrap:anywhere}
+  .pc .titre{font-weight:700;font-size:3.4mm;color:#4a3d70;overflow-wrap:anywhere}
+  .pc .host{font-size:2.6mm;color:#7a6e98;overflow-wrap:anywhere}
+  .pc .scan{font-family:var(--f-display);font-weight:600;font-size:3mm;color:var(--c)}
+  /* cartes verticales (1 et 4 par page) */
+  .sheet.v .pc{flex-direction:column;justify-content:center;text-align:center;padding:5mm}
+  .sheet.v .pc .t{align-items:center}
+  .sheet.v .pc .badge{align-self:center}
+  .sheet.n1 .pc .q{width:150mm;height:150mm} .sheet.n1 .pc .theme{font-size:11mm} .sheet.n1 .pc .prof{font-size:7mm} .sheet.n1 .pc .badge{font-size:9mm} .sheet.n1 .pc .titre{font-size:6.5mm} .sheet.n1 .pc .scan{font-size:6mm} .sheet.n1 .pc .host{font-size:4mm}
+  .sheet.n4 .pc .q{width:72mm;height:72mm} .sheet.n4 .pc .theme{font-size:6.5mm}
+  .sheet.n6 .pc .q{width:62mm;height:62mm}
+  .sheet.n10 .pc .q{width:44mm;height:44mm} .sheet.n10 .pc .theme{font-size:4.4mm} .sheet.n10 .pc .titre{font-size:3mm}
+}
 </style>
 </head>
 <body>
-
-<div class="wrap">
-  <header class="top">
-    <div>
-      <h1>Remplacements RCD</h1>
-      <p class="who">Collège Marcel Pagnol · mes classes <span class="mine-chips" id="mineChips"></span></p>
+<div class="deco" aria-hidden="true" id="deco"></div>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><div class="logo">π</div><div><h1>QR Codes</h1><small>Cours de M. Zeghoudi</small></div></div>
+    <p class="lbl">Casiers</p>
+    <div class="casiers" id="casiers"></div>
+    <p class="lbl">Rechercher</p>
+    <input type="search" id="search" placeholder="Thème, titre, lien…">
+    <div class="tools">
+      <button class="pill" id="btnPrint">🖨 Imprimer ce casier</button>
+      <button class="pill" id="btnGoSave">💾 Sauvegarde</button>
+      <button class="pill" id="btnHelp">📖 Mode d'emploi</button>
     </div>
-    <div class="pacte" id="pacte" aria-live="polite"><div class="lbl"><span>Pacte RCD 2026-2027</span><span><b id="pacteNum">–</b> / 18 h</span></div></div>
-  </header>
+  </aside>
 
-  <nav class="tabs" role="tablist">
-    <button class="tab" role="tab" id="tabOffers" aria-selected="true">À pourvoir</button>
-    <button class="tab" role="tab" id="tabMine" aria-selected="false">Mes RCD <span class="n" id="mineCount"></span></button>
-    <div class="dl"><span class="note" id="xlsxMsg" aria-live="polite"></span><button class="btn primary" id="btnXlsx" title="33 semaines comme ton planning Excel (cours, créneaux libres, remplacements en bleu), la liste de tes heures et le bilan du pacte">⬇ Planning annuel (Excel)</button></div>
-  </nav>
+  <main class="main">
+    <details class="help" id="help">
+      <summary>📖 Mode d'emploi</summary>
+      <ol>
+        <li><b>Créer un QR code :</b> colle le lien de la page (si tu oublies « https:// », il est ajouté tout seul). Le QR code apparaît aussitôt. Choisis le niveau, écris le thème (les thèmes déjà utilisés te sont proposés) et, si tu veux, ce que les élèves vont trouver. Clique « Ranger dans le casier ».</li>
+        <li><b>Retrouver un QR code :</b> clique un casier à gauche (Tous, 6e, 5e, 4e, 3e) : ses QR codes s'affichent rangés par thème. La case « Rechercher » trouve un thème, un titre ou un lien.</li>
+        <li><b>Le QR code est cliquable :</b> un clic dessus ouvre la page, pratique pour vérifier le lien.</li>
+        <li><b>En classe :</b> « Projeter » affiche le QR code en plein écran pour que les élèves le scannent depuis le tableau. Touche Échap pour fermer.</li>
+        <li><b>Image :</b> « PNG » télécharge la carte en grand, à coller dans une fiche Word ou un diaporama.</li>
+        <li><b>Imprimer :</b> « 🖨 Imprimer » sous une carte, ou « Imprimer ce casier » à gauche. Choisis 1, 4, 6 ou 10 QR codes par page, ou une planche de 21 ou 24 étiquettes à coller dans le cahier. « Remplir la page » répète le même QR code sur toute la page (un par élève). La fenêtre d'impression du navigateur s'ouvre : choisis ton imprimante, ou « Enregistrer au format PDF ».</li>
+        <li><b>Étiquettes :</b> dans la fenêtre d'impression, mets « Taille réelle » (100 %) et marges « Aucune ». La première fois, fais un essai sur une feuille blanche posée contre la planche, à la lumière.</li>
+        <li><b>Modifier, copier, supprimer :</b> « Modifier » recharge le QR code dans l'atelier (pour changer le lien, le niveau ou le thème), « Copier le lien » le met dans le presse-papiers, « Supprimer » demande une confirmation.</li>
+        <li><b>Liens qui demandent une connexion :</b> pour un document Google Drive, partage-le avec « Tous les utilisateurs disposant du lien ». Pour l'ENT ou PRONOTE, l'élève devra se connecter après avoir scanné.</li>
+        <li><b>Sauvegarde :</b> tes QR codes sont enregistrés <b>dans ce navigateur seulement</b>. En bas de la page, active la sauvegarde automatique (Chrome ou Edge sur ordinateur) dans un dossier iCloud Drive, Google Drive ou OneDrive, ou télécharge une sauvegarde de temps en temps. « Ouvrir une sauvegarde » remet tout en place, sans créer de doublons.</li>
+        <li><b>À ne pas faire :</b> effacer « Cookies et autres données des sites » (tu peux effacer l'historique seul) ; utiliser une fenêtre de navigation privée ; régler le navigateur pour effacer les cookies à la fermeture (sinon, ajoute une exception pour fatheyze.github.io) ; ouvrir le fichier index.html depuis ton disque au lieu de l'adresse https://fatheyze.github.io/qrcodes/ ; imprimer depuis l'aperçu de Claude (l'impression y est bloquée).</li>
+      </ol>
+    </details>
+    <div id="banner" class="banner" hidden></div>
 
-  <details class="help" id="help">
-    <summary>Mode d'emploi</summary>
-    <ol>
-      <li><b>Emploi du temps à jour :</b> dans PRONOTE, Mes données › Export au format ICal › Exporter, puis « Importer mon emploi du temps PRONOTE » ici (ou glisse le fichier sur la page). La page y lit tes cours, les cours annulés, les sorties, tes absences, les vacances, le stage des 3e et ton agenda. À refaire quand ton emploi du temps change.</li>
-      <li><b>Cours à pourvoir :</b> Emploi du temps › Remplacements › Remplacements à pourvoir, décoche « Uniquement les cours qui me concernent », copie la liste et fais Ctrl+V sur cette page.</li>
-      <li><b>Se positionner :</b> clique une case verte de la grille, ou un horaire du bandeau « Aujourd'hui / Demain ». Les cours dispos s'affichent (tes classes d'abord, puis les 6e et 3e). Porte-toi volontaire <b>dans PRONOTE</b>, puis clique « Je me suis porté volontaire » ici pour le suivi.</li>
-      <li><b>Imprévus :</b> clique une case pour dire « je suis libre » (cours qui saute) ou « je ne suis pas disponible » (réunion, sortie que tu accompagnes). Les flèches ‹ › ou les touches ← → changent de semaine.</li>
-      <li><b>Suivi (onglet Mes RCD) :</b> « Confirmé sur PRONOTE » quand la direction valide, « Annulé » s'il saute. Une ligne passe en « effectué » à l'heure de fin. L'import PRONOTE confirme tout seul les remplacements qu'il contient et signale ceux qui n'y sont pas. « Copier le tableau pour Excel » donne la liste à coller ailleurs.</li>
-      <li><b>Pacte :</b> la barre du haut compte les heures effectuées, confirmées et en attente sur 18 h. Le badge « +N pactes possibles » est un maximum théorique calculé sur tes créneaux libres du lundi au jeudi d'ici le 2 juillet ; clique-le pour voir le calcul.</li>
-      <li><b>Bilan :</b> « Planning annuel (Excel) » télécharge les 33 semaines et toutes tes heures.</li>
-      <li id="helpSave"><b>Sauvegarde :</b> tes données sont enregistrées <b>dans ce navigateur seulement</b>. Onglet Mes RCD, cadre Sauvegarde : active la sauvegarde automatique (Chrome ou Edge sur ordinateur) dans un dossier iCloud Drive, Google Drive ou OneDrive, ou télécharge une sauvegarde de temps en temps. Si les données ont été effacées, « Ouvrir une sauvegarde » remet tout en place.</li>
-      <li><b>À ne pas faire :</b> effacer « Cookies et autres données des sites » (tu peux effacer l'historique seul) ; utiliser une fenêtre de navigation privée ; régler le navigateur pour effacer les cookies à la fermeture (sinon, ajoute une exception pour fatheyze.github.io) ; ouvrir le fichier index.html depuis ton disque au lieu de l'adresse https://fatheyze.github.io/rcd/.</li>
-    </ol>
-  </details>
-
-  <div id="dbBanner" class="banner" hidden></div>
-
-  <section id="pOffers">
-    <div class="paste">
-      <div class="paste-head">
+    <section class="atelier" aria-labelledby="atelierTitle">
+      <div class="form">
         <div>
-          <h2>Liste PRONOTE</h2>
-          <p id="pasteAt" class="paste-at"></p>
-          <p id="pasteInfo">Emploi du temps › Remplacements › Remplacements à pourvoir : décoche « Uniquement les cours qui me concernent », sélectionne la liste, copie, puis colle ici (ou Ctrl+V n'importe où sur la page).</p>
+          <h2 id="atelierTitle">Nouveau QR code</h2>
+          <p class="sub" id="atelierSub">Colle un lien : le QR code apparaît aussitôt. Choisis le niveau, écris le thème, puis range-le dans son casier.</p>
         </div>
-        <div class="row">
-          <button class="btn" id="btnEdit">Coller une nouvelle liste</button>
+        <label class="field"><span>Lien de la page</span>
+          <input id="fUrl" type="url" inputmode="url" placeholder="https://…" autocomplete="off">
+          <span class="err" id="urlErr" hidden></span>
+        </label>
+        <div class="field"><span>Niveau</span><div class="niveaux" id="niveaux"></div></div>
+        <label class="field"><span>Thème</span><input id="fTheme" list="themes" placeholder="Ex. : Fractions, Théorème de Pythagore…" maxlength="60" autocomplete="off"><datalist id="themes"></datalist></label>
+        <label class="field"><span>Ce que les élèves vont trouver <small style="font-weight:600;color:var(--muted)">(facultatif)</small></span><input id="fTitre" placeholder="Ex. : Vidéo de cours, Exercices corrigés, Quiz…" maxlength="80" autocomplete="off"></label>
+        <div class="actions">
+          <button class="btn-main" id="btnSave" disabled>Ranger dans le casier</button>
+          <button class="btn-sec" id="btnCancel" hidden>Annuler la modification</button>
         </div>
+        <p class="msg" id="msg" aria-live="polite"></p>
       </div>
-      <div class="ics-row">
-        <p class="note" id="icsInfo"></p>
-        <div class="row"><label class="btn" for="icsFile">Importer mon emploi du temps PRONOTE (.ics)</label><input type="file" id="icsFile" accept=".ics,text/calendar" hidden></div>
-        <p class="note" id="icsMsg" aria-live="polite"></p>
-      </div>
-      <div id="pasteBox" hidden>
-        <textarea id="pasteArea" placeholder="Colle ici la liste copiée dans PRONOTE (Cmd+V ou Ctrl+V). La page la lit aussitôt et ce cadre se referme."></textarea>
-        <div class="row" style="margin-top:8px"><button class="btn primary" id="btnAnalyse">Analyser</button><button class="btn ghost" id="btnCancel">Annuler</button></div>
-      </div>
-    </div>
+      <div class="preview" id="preview"></div>
+    </section>
 
-    <div class="today" id="today"></div>
-    <div class="summary" id="summary"></div>
+    <section class="coll" aria-labelledby="collTitle">
+      <div class="coll-head"><h2 id="collTitle"></h2><div class="row"><span class="mini" id="collCount"></span></div></div>
+      <div id="collection" style="display:grid;gap:18px;margin-top:12px"></div>
+    </section>
 
-    <div class="main">
-      <div id="lists"></div>
-      <aside class="side"><div class="week" id="week"></div></aside>
-    </div>
-  </section>
-
-  <section id="pMine" hidden>
-    <div class="rcd-grid">
-      <div id="mineList"></div>
-      <div style="display:grid;gap:14px;align-content:start">
-      <form class="addform" id="addForm" autocomplete="off">
-        <h3>Ajouter un remplacement</h3>
-        <p class="note" style="margin:0">Pour un RCD reçu par « Propositions de remplacement » ou noté ailleurs.</p>
-        <div class="two">
-          <label>Date<input type="date" id="fDate" required></label>
-          <label>Début<select id="fSlot"></select></label>
-        </div>
-        <div class="two">
-          <label>Durée<select id="fLen"><option value="1">1 créneau</option><option value="2">2 créneaux</option><option value="3">3 créneaux</option></select></label>
-          <label>Classe<input id="fClasse" placeholder="5E"></label>
-        </div>
-        <label>Professeur absent / matière<input id="fProf" placeholder="Mme DUPONT · Français"></label>
-        <label>Statut<select id="fStatut"><option value="confirme">Confirmé sur PRONOTE</option><option value="attente">Volontaire, en attente</option></select></label>
-        <div class="row"><button class="btn primary" type="submit">Ajouter</button><span class="note" id="fMsg"></span></div>
-      </form>
-      <div class="addform" id="saveCard">
-        <h3>Sauvegarde</h3>
-        <p class="note" style="margin:0">Tes données sont dans ce navigateur. Si tu effaces les cookies ou les données du site, elles disparaissent : garde une copie dans un fichier.</p>
-        <p class="note" style="margin:0;font-weight:700" id="autoState"></p>
-        <div class="row"><button class="btn primary" type="button" id="btnAuto" hidden>Activer la sauvegarde automatique</button><button class="btn" type="button" id="btnAutoResume" hidden>Reprendre la sauvegarde automatique</button></div>
-        <div class="row"><button class="btn" type="button" id="btnDlBackup">Télécharger une sauvegarde (.json)</button><label class="btn" for="restoreFile" style="cursor:pointer">Ouvrir une sauvegarde</label><input type="file" id="restoreFile" accept=".json,application/json" hidden></div>
-        <p class="note" id="bMsg" aria-live="polite" style="margin:0"></p>
+    <section class="save" id="saveCard">
+      <h2>Sauvegarde</h2>
+      <p>Tes QR codes sont enregistrés dans ce navigateur. Garde aussi une copie dans un fichier : si les données du navigateur sont effacées, tu les retrouves en ouvrant ce fichier.</p>
+      <p class="state" id="autoState"></p>
+      <div class="row">
+        <button class="btn-sec" id="btnAuto" hidden>Activer la sauvegarde automatique</button>
+        <button class="btn-sec" id="btnAutoResume" hidden>Reprendre la sauvegarde automatique</button>
+        <button class="btn-sec" id="btnDl">Télécharger une sauvegarde (.json)</button>
+        <label class="btn-sec" for="fRestore">Ouvrir une sauvegarde</label><input type="file" id="fRestore" accept=".json,application/json" hidden>
       </div>
-      </div>
-    </div>
-  </section>
+      <p class="msg" id="saveMsg" aria-live="polite"></p>
+    </section>
+  </main>
 </div>
+<div class="proj" id="proj" hidden></div>
+<div class="modal" id="printModal" hidden role="dialog" aria-modal="true" aria-labelledby="printTitle">
+  <div class="box">
+    <h2 id="printTitle">Imprimer</h2>
+    <p id="printWhat"></p>
+    <div><p style="font-weight:800;color:var(--ink);margin-bottom:8px">Format d'impression (A4)</p><div class="opts" id="printOpts"></div></div>
+    <p class="lab-note" id="labNote" hidden></p>
+    <label class="check" id="fillWrap"><input type="checkbox" id="printFill"> <span>Remplir la page avec ce QR code (à découper et distribuer aux élèves)</span></label>
+    <div class="row"><button class="btn-main" id="printGo">🖨 Imprimer</button><button class="btn-sec" id="printCancel">Annuler</button></div>
+  </div>
+</div>
+<div id="printArea"></div>
 
 <script>
-const WEEKS = [{"n":4,"q":"Q1","m":"2026-09-21","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6E > 6EP2","L","6E > 6EP1","6B","6B > 6BP2"],["6D > 6DP2","6D > 6DP1","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":5,"q":"Q2","m":"2026-09-28","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6C > 6CP1","L","6C > 6CP2","6B","6B > 6BP1"],["3F > 3FP1","3F > 3FP2","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":6,"q":"Q1","m":"2026-10-05","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6E > 6EP2","L","6E > 6EP1","6B","6B > 6BP2"],["6D > 6DP2","6D > 6DP1","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":7,"q":"Q2","m":"2026-10-12","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6C > 6CP1","L","6C > 6CP2","6B","6B > 6BP1"],["3F > 3FP1","3F > 3FP2","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":10,"q":"Q1","m":"2026-11-02","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6E > 6EP2","L","6E > 6EP1","6B","6B > 6BP2"],["6D > 6DP2","6D > 6DP1","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":11,"q":"Q2","m":"2026-11-09","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6C > 6CP1","L","6C > 6CP2","6B","6B > 6BP1"],["F","F","F","F","F","F","F","F"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":12,"q":"Q1","m":"2026-11-16","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6E > 6EP2","L","6E > 6EP1","6B","6B > 6BP2"],["6D > 6DP2","6D > 6DP1","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":13,"q":"Q2","m":"2026-11-23","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6C > 6CP1","L","6C > 6CP2","6B","6B > 6BP1"],["3F > 3FP1","3F > 3FP2","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":14,"q":"Q1","m":"2026-11-30","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6E > 6EP2","L","6E > 6EP1","6B","6B > 6BP2"],["6D > 6DP2","6D > 6DP1","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":15,"q":"Q2","m":"2026-12-07","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6C > 6CP1","L","6C > 6CP2","6B","6B > 6BP1"],["3F > 3FP1","3F > 3FP2","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":16,"q":"Q1","m":"2026-12-14","g":[["6E","6E","6C","L","6D","L:3F en stage","6D","6B"],["6B","L:3F en stage","6D","6E > 6EP2","L","6E > 6EP1","6B","6B > 6BP2"],["6D > 6DP2","6D > 6DP1","6C","6E","X","X","X","X"],["L:3F en stage","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":19,"q":"Q2","m":"2027-01-04","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6C > 6CP1","L","6C > 6CP2","6B","6B > 6BP1"],["3F > 3FP1","3F > 3FP2","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":20,"q":"Q1","m":"2027-01-11","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6E > 6EP2","L","6E > 6EP1","6B","6B > 6BP2"],["6D > 6DP2","6D > 6DP1","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":21,"q":"Q2","m":"2027-01-18","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6C > 6CP1","L","6C > 6CP2","6B","6B > 6BP1"],["3F > 3FP1","3F > 3FP2","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":22,"q":"Q1","m":"2027-01-25","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6E > 6EP2","L","6E > 6EP1","6B","6B > 6BP2"],["6D > 6DP2","6D > 6DP1","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":23,"q":"Q2","m":"2027-02-01","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6C > 6CP1","L","6C > 6CP2","6B","6B > 6BP1"],["3F > 3FP1","3F > 3FP2","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":26,"q":"Q1","m":"2027-02-22","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6E > 6EP2","L","6E > 6EP1","6B","6B > 6BP2"],["6D > 6DP2","6D > 6DP1","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":27,"q":"Q2","m":"2027-03-01","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6C > 6CP1","L","6C > 6CP2","6B","6B > 6BP1"],["3F > 3FP1","3F > 3FP2","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":28,"q":"Q1","m":"2027-03-08","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6E > 6EP2","L","6E > 6EP1","6B","6B > 6BP2"],["6D > 6DP2","6D > 6DP1","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":29,"q":"Q2","m":"2027-03-15","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6C > 6CP1","L","6C > 6CP2","6B","6B > 6BP1"],["3F > 3FP1","3F > 3FP2","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":30,"q":"Q1","m":"2027-03-22","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6E > 6EP2","L","6E > 6EP1","6B","6B > 6BP2"],["6D > 6DP2","6D > 6DP1","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":31,"q":"Q2","m":"2027-03-29","g":[["F","F","F","F","F","F","F","F"],["6B","3F","6D","6C > 6CP1","L","6C > 6CP2","6B","6B > 6BP1"],["3F > 3FP1","3F > 3FP2","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":34,"q":"Q1","m":"2027-04-19","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6E > 6EP2","L","6E > 6EP1","6B","6B > 6BP2"],["6D > 6DP2","6D > 6DP1","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":35,"q":"Q2","m":"2027-04-26","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6C > 6CP1","L","6C > 6CP2","6B","6B > 6BP1"],["3F > 3FP1","3F > 3FP2","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":36,"q":"Q1","m":"2027-05-03","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6E > 6EP2","L","6E > 6EP1","6B","6B > 6BP2"],["6D > 6DP2","6D > 6DP1","6C","6E","X","X","X","X"],["F","F","F","F","F","F","F","F"],["V","V","V","V","V","V","V","V"]]},{"n":37,"q":"Q2","m":"2027-05-10","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6C > 6CP1","L","6C > 6CP2","6B","6B > 6BP1"],["3F > 3FP1","3F > 3FP2","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":38,"q":"Q1","m":"2027-05-17","g":[["F","F","F","F","F","F","F","F"],["6B","3F","6D","6E > 6EP2","L","6E > 6EP1","6B","6B > 6BP2"],["6D > 6DP2","6D > 6DP1","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":39,"q":"Q2","m":"2027-05-24","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6C > 6CP1","L","6C > 6CP2","6B","6B > 6BP1"],["3F > 3FP1","3F > 3FP2","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":40,"q":"Q1","m":"2027-05-31","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6E > 6EP2","L","6E > 6EP1","6B","6B > 6BP2"],["6D > 6DP2","6D > 6DP1","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":41,"q":"Q2","m":"2027-06-07","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6C > 6CP1","L","6C > 6CP2","6B","6B > 6BP1"],["3F > 3FP1","3F > 3FP2","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":42,"q":"Q1","m":"2027-06-14","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6E > 6EP2","L","6E > 6EP1","6B","6B > 6BP2"],["6D > 6DP2","6D > 6DP1","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":43,"q":"Q2","m":"2027-06-21","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6C > 6CP1","L","6C > 6CP2","6B","6B > 6BP1"],["3F > 3FP1","3F > 3FP2","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]},{"n":44,"q":"Q1","m":"2027-06-28","g":[["6E","6E","6C","L","6D","3F","6D","6B"],["6B","3F","6D","6E > 6EP2","L","6E > 6EP1","6B","6B > 6BP2"],["6D > 6DP2","6D > 6DP1","6C","6E","X","X","X","X"],["3F","L","6E","L","6B","6D","6C","6C"],["V","V","V","V","V","V","V","V"]]}];
-const MES_CLASSES = ["3F","6B","6C","6D","6E"];
-const PACTE = 18;
-const SLOTS = [["08h40","09h40"],["09h40","10h45"],["10h45","11h45"],["11h45","12h35"],["13h05","14h00"],["14h00","15h10"],["15h10","16h00"],["16h00","17h00"]];
-const toMin = s => { const m = /(\d{1,2})h(\d{2})/.exec(s); return m ? (+m[1])*60 + (+m[2]) : NaN; };
-const SLOT_MIN = SLOTS.map(([a,b]) => [toMin(a), toMin(b)]);
-const JOURS = ["lun.","mar.","mer.","jeu.","ven.","sam.","dim."];
-const JOURS_L = ["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"];
-const MOIS = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
-const MOIS_L = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
-const MONTH_KEYS = {janv:1,janvier:1,fevr:2,"févr":2,"février":2,fevrier:2,mars:3,avr:4,avril:4,mai:5,juin:6,juil:7,juillet:7,"août":8,aout:8,sept:9,septembre:9,oct:10,octobre:10,nov:11,novembre:11,"déc":12,dec:12,"décembre":12,decembre:12};
-const START_YEAR = 2026;
+/*! QR Code Generator for JavaScript — Copyright (c) 2009 Kazuhiko Arase — MIT license — https://github.com/kazuhikoarase/qrcode-generator */
+var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,(function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1}))},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(n*r,o*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(t,r){var e=n("友");if(2!=e.length||38726!=(e[0]<<8|e[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}((function(){return qrcode}));
+</script>
+<script>
+/* ==========================================================================
+   Nuage : synchronisation des données de l'outil dans un dépôt GitHub privé.
+   Une seule clé par navigateur, partagée par tous les outils de fatheyze.github.io.
+   ========================================================================== */
+const Nuage = (function () {
+  const OWNER = "fatheyze", REPO = "donnees-outils", BRANCH = "main";
+  const KEY = "nuage-github-cle";
+  const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
+  let cfg = null, ready = false, applying = false, sha = null, timer = null, pushing = false, again = false;
+  let state = "off", lastSync = null, errMsg = "", choice = null;
 
-/* ---------- dates ---------- */
-const pad = n => String(n).padStart(2,"0");
-const iso = d => d.getUTCFullYear()+"-"+pad(d.getUTCMonth()+1)+"-"+pad(d.getUTCDate());
-const parseIso = s => { const [y,m,d] = s.split("-").map(Number); return new Date(Date.UTC(y,m-1,d)); };
-const dow = s => (parseIso(s).getUTCDay()+6)%7; // 0 = lundi
-const fmtShort = s => { const d = parseIso(s); return JOURS[dow(s)]+" "+d.getUTCDate()+" "+MOIS[d.getUTCMonth()]; };
-const fmtLong = s => { const d = parseIso(s); return JOURS_L[dow(s)]+" "+d.getUTCDate()+" "+MOIS_L[d.getUTCMonth()]; };
-const todayIso = (() => { const n = new Date(); return n.getFullYear()+"-"+pad(n.getMonth()+1)+"-"+pad(n.getDate()); })();
-function weekOf(dateIso){
-  const t = parseIso(dateIso).getTime();
-  for (let i=0;i<WEEKS.length;i++){
-    const m = parseIso(WEEKS[i].m).getTime();
-    const diff = Math.round((t-m)/86400000);
-    if (diff>=0 && diff<7) return {wi:i, day:diff};
-  }
-  return null;
-}
-const slotKey = (date, si) => date+"_"+SLOTS[si][0].replace("h","");
-const overlapSlots = (start,end) => { const a=toMin(start), b=toMin(end); const r=[]; SLOT_MIN.forEach(([s,e],i)=>{ if (a<e && b>s) r.push(i); }); return r; };
+  const ls = {
+    get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} },
+    del: k => { try { localStorage.removeItem(k); } catch (e) {} }
+  };
+  const token = () => ls.get(KEY) || "";
+  const dirtyKey = () => "nuage-attente-" + cfg.file;
+  const isDirty = () => ls.get(dirtyKey()) === "1";
+  const setDirty = v => v ? ls.set(dirtyKey(), "1") : ls.del(dirtyKey());
+  const hm = d => `${String(d.getHours()).padStart(2, "0")}h${String(d.getMinutes()).padStart(2, "0")}`;
 
-function currentWeekIdx(){
-  const w = weekOf(todayIso); if (w) return w.wi;
-  const next = WEEKS.findIndex(x => x.m > todayIso);
-  return next >= 0 ? next : WEEKS.length-1;
-}
-
-/* ---------- PRONOTE parser ---------- */
-function monthFrom(word){ const k = word.toLowerCase().replace(/\.$/,""); return MONTH_KEYS[k] || null; }
-/* Lecture souple de la liste PRONOTE : peu importe que les champs soient sur des lignes séparées,
-   séparés par des tabulations ou collés sur une même ligne. On découpe en blocs autour de chaque horaire. */
-const MONTH_RX = "(janv|févr|fevr|mars|avr|mai|juin|juil|août|aout|sept|oct|nov|déc|dec)[a-zéû]*\\.?";
-const TIME_RX = /(\d{1,2})\s*h\s*(\d{2})\s*(?:[-–—]|à|a)\s*(\d{1,2})\s*h\s*(\d{2})(?:\s*\(\s*\d+\s*h\s*\d{2}\s*\))?/gi;
-function parsePronote(text){
-  const T = text.replace(/[   ]/g," ").replace(/\r\n?/g,"\n").replace(/\t+/g,"\n");
-  const dates = []; const dRx = new RegExp("(?:^|[^\\d/])(\\d{1,2})\\s*(?:er)?\\s*\\n?\\s*" + MONTH_RX + "(?=$|[\\s,;)])", "gim");
-  let m; while ((m = dRx.exec(T))) { const mo = monthFrom(m[2]); if (mo) dates.push({i:m.index, date:mkDate(+m[1], mo)}); }
-  const times = []; TIME_RX.lastIndex = 0;
-  while ((m = TIME_RX.exec(T))) times.push({i:m.index, end:m.index+m[0].length, s:pad(+m[1])+"h"+m[2], e:pad(+m[3])+"h"+m[4]});
-  const out = [];
-  times.forEach((tm, k) => {
-    let d = null; for (const x of dates) { if (x.i <= tm.i) d = x; else break; }
-    if (!d) return;
-    // le bloc va jusqu'au prochain horaire, ou jusqu'à la date qui le précède
-    let stop = k+1 < times.length ? times[k+1].i : T.length;
-    const nd = dates.find(x => x.i > tm.end && x.i < stop); if (nd) stop = nd.i;
-    let rest = T.slice(tm.end, stop);
-    const o = {date:d.date, start:tm.s, end:tm.e, classe:"", matiere:"", prof:"", salle:"", statut:"", deja:false};
-    if (/ne plus être volontaire|retirer ma|se désister|vous êtes volontaire/i.test(rest)) o.deja = true;
-    const st = /(pas d'autre volontaire|\d+\s+autres?\s+volontaires?|vous êtes volontaire[^\n]*)/i.exec(rest); if (st) o.statut = st[1].trim();
-    rest = rest.replace(/se porter volontaire|ne plus être volontaire|retirer ma candidature|se désister/gi, "\n")
-               .replace(/pas d'autre volontaire|\d+\s+autres?\s+volontaires?|vous êtes volontaire[^\n]*/gi, "\n");
-    const sa = /salle\s*:\s*([^\n]*)/i.exec(rest); if (sa) { o.salle = sa[1].trim(); rest = rest.replace(sa[0], "\n"); }
-    const su = /(?:^|\n|\s)((?![3-6][A-Z][A-Z0-9]{0,8}\s)[A-ZÀ-Üa-zà-ü][^\n()]*?)\s*\(\s*((?:M\.|Mme|MME|Mlle|M)\s*[^()\n]*?)\s*\)/.exec(rest);
-    if (su) { o.matiere = su[1].trim(); o.prof = su[2].trim(); rest = rest.replace(su[0], "\n"); }
-    const cl = /(?:^|\s)([3-6][A-Z][A-Z0-9]{0,8})(?=\s|$)/.exec(rest); if (cl) o.classe = cl[1];
-    out.push(o);
-  });
-  const seen = new Set();
-  return out.filter(o => { const k=[o.date,o.start,o.classe,o.matiere].join("|"); if (seen.has(k)) return false; seen.add(k); return true; });
-}
-function mkDate(day, month){ const y = month>=8 ? START_YEAR : START_YEAR+1; return iso(new Date(Date.UTC(y, month-1, day))); }
-
-/* ---------- emploi du temps PRONOTE (fichier iCal) ---------- */
-let icsData = null;
-const ICS_KEY = "rcd-pagnol-ics";
-const PARIS = new Intl.DateTimeFormat("fr-FR", {timeZone:"Europe/Paris", year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", hourCycle:"h23"});
-function icsTime(v){
-  const m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z?))?$/.exec(v||"");
-  if (!m) return null;
-  if (!m[4]) return {date:`${m[1]}-${m[2]}-${m[3]}`, min:null};
-  if (!m[7]) return {date:`${m[1]}-${m[2]}-${m[3]}`, min:(+m[4])*60+(+m[5])};
-  const p = Object.fromEntries(PARIS.formatToParts(new Date(Date.UTC(+m[1], m[2]-1, +m[3], +m[4], +m[5], +m[6]))).map(x=>[x.type, x.value]));
-  return {date:`${p.year}-${p.month}-${p.day}`, min:(+p.hour)*60+(+p.minute)};
-}
-const hhmm = min => pad(Math.floor(min/60))+"h"+pad(min%60);
-const icsUnesc = s => (s||"").replace(/\\n/gi,"\n").replace(/\\([,;\\])/g,"$1").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&");
-function icsClassLabel(summary){
-  const part = summary.includes(" - ") ? summary.slice(summary.lastIndexOf(" - ")+3) : summary;
-  const groups = [...part.matchAll(/<(\w+)>\s*(\w+)/g)];
-  if (groups.length) return {classe:groups[0][2], label: groups[0][1]+" › "+groups.map(g=>g[2]).join("+")};
-  return {classe:part.trim(), label:part.trim()};
-}
-const ICS_RANK = {rempl:5, cours:4, abs:3, sortie:2, annule:1};
-
-function parseIcs(text){
-  const lines = text.replace(/\r\n?/g,"\n").replace(/\n[ \t]/g,"").split("\n");
-  const head = {}; const events = []; let cur = null;
-  for (const line of lines){
-    if (line==="BEGIN:VEVENT"){ cur = {}; continue; }
-    if (line==="END:VEVENT"){ if (cur) events.push(cur); cur = null; continue; }
-    const i = line.indexOf(":"); if (i<0) continue;
-    const key = line.slice(0,i).split(";")[0].toUpperCase(), val = line.slice(i+1);
-    if (cur){ if (!(key in cur)) cur[key] = val; } else if (!(key in head)) head[key] = val;
+  function b64enc(text) {
+    const bytes = new TextEncoder().encode(text); let bin = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(bin);
   }
-  if (!events.length) throw new Error("vide");
-  const from = icsTime(head["X-CALSTART"])?.date || null, to = icsTime(head["X-CALEND"])?.date || null;
-  const data = {generated:new Date().toISOString(), source:"PRONOTE", from, to, days:{}, closed:{}, agenda:[], stages:[], rempl:{}, stats:{cours:0, rempl:0, annule:0, abs:0, sortie:0}};
-  const put = (date, si, e) => { const d = data.days[date] || (data.days[date] = Array(SLOTS.length).fill(null)); if (!d[si] || ICS_RANK[e.k] > ICS_RANK[d[si].k]) d[si] = e; };
-  let minD = null, maxD = null;
-  for (const ev of events){
-    const cat = icsUnesc(ev.CATEGORIES||""), summary = icsUnesc(ev.SUMMARY||""), desc = icsUnesc(ev.DESCRIPTION||"");
-    const s = icsTime(ev.DTSTART), e = icsTime(ev.DTEND); if (!s) continue;
-    if (cat==="Jours fériés"){
-      // journée(s) entière(s) : DTEND exclu
-      for (let d = parseIso(s.date); e && iso(d) < e.date; d = new Date(d.getTime()+86400000)) data.closed[iso(d)] = summary || "Férié";
-      continue;
-    }
-    if (cat.startsWith("Sessions de stage")){
-      const cl = (/Classes\s*:\s*([^\n]+)/.exec(desc)||[])[1] || "";
-      data.stages.push({from:s.date, to:e ? iso(new Date(parseIso(e.date).getTime()-86400000)) : s.date, classes:cl.split(",").map(x=>x.trim()).filter(Boolean), t:summary.replace(/^Session de stage\s*:\s*/,"")});
-      continue;
-    }
-    if (cat==="Agenda" || !cat.startsWith("Cours")){
-      if (s.min!==null && e && e.min!==null) data.agenda.push({d:s.date, a:s.min, b:e.min, t:summary});
-      else data.agenda.push({d:s.date, a:null, b:null, t:summary, to: e ? iso(new Date(parseIso(e.date).getTime()-86400000)) : s.date});
-      continue;
-    }
-    if (s.min===null || !e || e.min===null) continue;
-    minD = !minD || s.date<minD ? s.date : minD; maxD = !maxD || s.date>maxD ? s.date : maxD;
-    const kind = cat.replace(/^Cours\s*-?\s*/,"");
-    const body = summary.replace(/^(Cours annulé|Abs personnelle|Abs administrative|Sortie pédagogique)\s*:\s*/,"");
-    const matiere = body.includes(" - ") ? body.slice(0, body.indexOf(" - ")) : body;
-    const {classe, label} = icsClassLabel(body);
-    const salle = icsUnesc(ev.LOCATION||"");
-    const slots = []; SLOT_MIN.forEach(([a,b],i)=>{ if (s.min<b && e.min>a) slots.push(i); });
-    let entry;
-    if (kind.startsWith("Remplacement de")){
-      const prof = kind.replace(/^Remplacement de\s*/,"");
-      entry = {k:"rempl", l:"RCD "+classe, s:prof};
-      const id = s.date+"_"+hhmm(s.min).replace("h","");
-      data.rempl[id] = {date:s.date, debut:hhmm(s.min), fin:hhmm(e.min), classe, prof, salle};
-      data.stats.rempl++;
-    } else if (kind==="Cours annulé"){ entry = {k:"annule", l:label}; data.stats.annule++; }
-    else if (kind.startsWith("Abs")){ entry = {k:"abs", l:label, s:kind}; data.stats.abs++; }
-    else if (kind==="Sortie pédagogique"){ entry = {k:"sortie", l:label}; data.stats.sortie++; }
-    else {
-      const extra = [matiere && !/^MATHEMATIQUES$/i.test(matiere) ? matiere.toLowerCase() : "", salle && salle!=="106" ? "salle "+salle : "", kind && kind!=="Cours" ? kind.toLowerCase() : ""].filter(Boolean).join(" · ");
-      entry = {k:"cours", l:label, c:classe}; if (extra) entry.s = extra;
-      data.stats.cours++;
-    }
-    slots.forEach(si => put(s.date, si, entry));
+  function b64dec(b64) {
+    const bin = atob(b64.replace(/\s/g, ""));
+    const bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
   }
-  if (!data.from) data.from = minD; if (!data.to) data.to = maxD;
-  data.firstCourse = minD; data.lastCourse = maxD;
-  return data;
-}
-
-/* case de l'emploi du temps d'après le fichier PRONOTE (null = pas couvert, on garde l'Excel) */
-function icsBase(date, si){
-  if (!icsData || !icsData.from || date < icsData.from || date > icsData.to) return null;
-  const dw = dow(date); if (dw>4) return null;
-  if (icsData.closed[date]) return {free:false, kind:"ferie", label:icsData.closed[date].toLowerCase()};
-  if (dw===2 && si>=4) return {free:false, kind:"ferme", label:"fermé"};
-  const e = icsData.days[date] ? icsData.days[date][si] : null;
-  if (!e) return dw===4 ? {free:true, kind:"vend", label:"libre", sub:"jour sans cours"} : {free:true, kind:"libre", label:"libre"};
-  if (e.k==="cours"){
-    const st = (icsData.stages||[]).find(x => date>=x.from && date<=x.to && x.classes.some(c => (e.c||"").toUpperCase().startsWith(c.toUpperCase())));
-    if (st) return {free:true, kind:"libre", label:"libre", sub:e.c+" en stage"};
-    return {free:false, kind:"cours", label:e.l, sub:e.s||""};
+  async function gh(path, opts = {}, tok = token()) {
+    return fetch(API + path, { cache: "no-store", ...opts,
+      headers: { "Authorization": "Bearer " + tok, "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", ...(opts.headers || {}) } });
   }
-  if (e.k==="rempl") return {free:false, kind:"rcdp", label:e.l, sub:e.s};
-  if (e.k==="abs") return {free:false, kind:"abs", label:e.s, sub:e.l};
-  if (e.k==="sortie") return {free:true, kind:"libre", label:"libre", sub:"sortie péda. "+e.l};
-  if (e.k==="annule") return {free:true, kind:"libre", label:"libre", sub:"cours annulé "+e.l};
-  return null;
-}
-function agendaAt(date, si){
-  if (!icsData) return [];
-  const [a,b] = SLOT_MIN[si];
-  return icsData.agenda.filter(x => (x.a!==null ? (x.d===date && x.a<b && x.b>a) : (date>=x.d && date<=(x.to||x.d))));
-}
-function loadIcsLocal(){ try { const s = localStorage.getItem(ICS_KEY); if (s) icsData = JSON.parse(s); } catch(e){} }
-async function saveIcs(data){
-  icsData = data;
-  if (typeof db !== "undefined" && db){
-    try { await db.collection("edt").doc("pronote").set(data); }
-    catch(e){ showBanner("L'emploi du temps n'a pas pu être enregistré. Réessaie l'import."); }
-  } else {
-    try { localStorage.setItem(ICS_KEY, JSON.stringify(data)); if (typeof scheduleAutoSave === "function") scheduleAutoSave(); }
-    catch(e){ showBanner("Ce navigateur bloque l'enregistrement : l'emploi du temps importé sera perdu à la fermeture."); }
+  async function getRemote() {
+    const r = await gh(`/contents/${encodeURIComponent(cfg.file)}?ref=${BRANCH}`);
+    if (r.status === 404) return null;
+    if (!r.ok) throw r;
+    const j = await r.json(); sha = j.sha;
+    if (j.encoding === "base64" && j.content) return b64dec(j.content);
+    const raw = await gh(`/contents/${encodeURIComponent(cfg.file)}?ref=${BRANCH}`, { headers: { "Accept": "application/vnd.github.raw+json" } });
+    if (!raw.ok) throw raw;
+    return await raw.text();
   }
-}
-/* les remplacements trouvés dans PRONOTE passent en « confirmé » dans Mes RCD */
-async function syncRemplacements(){
-  let added = 0, confirmed = 0;
-  for (const [id, r] of Object.entries(icsData.rempl || {})){
-    const ex = rcd.get(id);
-    const next = {...(ex||{}), date:r.date, debut:r.debut, fin:r.fin, classe:r.classe, prof:r.prof, salle:(ex&&ex.salle)||r.salle, matiere:(ex&&ex.matiere)||"", statut:"confirme", source:(ex&&ex.source)||"pronote"};
-    if (!ex){ added++; await write("rcd", id, next); }
-    else if (ex.statut!=="confirme" || ex.classe!==r.classe || ex.prof!==r.prof || ex.fin!==r.fin){ confirmed++; await write("rcd", id, next); }
+  async function putRemote(text) {
+    const body = { message: `Mise à jour ${cfg.file} (${new Date().toLocaleString("fr-FR")})`, content: b64enc(text), branch: BRANCH };
+    if (sha) body.sha = sha;
+    let r = await gh(`/contents/${encodeURIComponent(cfg.file)}`, { method: "PUT", body: JSON.stringify(body) });
+    if (r.status === 409 || r.status === 422) { await getRemote(); if (sha) body.sha = sha; else delete body.sha;
+      r = await gh(`/contents/${encodeURIComponent(cfg.file)}`, { method: "PUT", body: JSON.stringify(body) }); }
+    if (!r.ok) throw r;
+    sha = (await r.json()).content.sha;
   }
-  return {added, confirmed};
-}
-async function importIcsFile(file){
-  const msg = document.getElementById("icsMsg");
-  try {
-    const text = await file.text();
-    const data = parseIcs(text);
-    data.fileName = file.name;
-    await saveIcs(data);
-    const {added, confirmed} = await syncRemplacements();
-    msg.textContent = `Importé : ${data.stats.cours} cours, ${data.stats.rempl} remplacements PRONOTE (${added} ajoutés à Mes RCD, ${confirmed} mis à jour), ${data.stats.annule} cours annulés, ${data.stats.sortie} sorties, ${data.stats.abs} absences.`;
+  function apply(text) {
+    applying = true;
+    try { cfg.apply(JSON.parse(text)); } finally { applying = false; }
+  }
+  function fail(e) {
+    if (e && e.status === 401) { state = "cle"; errMsg = "La clé n'est plus valable (expirée ou supprimée). Colle une nouvelle clé."; }
+    else if (e && (e.status === 403 || e.status === 404)) { state = "cle"; errMsg = `Cette clé n'a pas accès au dépôt « ${REPO} ».`; }
+    else { state = "horsligne"; errMsg = ""; }
     render();
-  } catch(e){
-    msg.textContent = "Ce fichier n'est pas un emploi du temps PRONOTE lisible. Dans PRONOTE : Mes données › Export au format ICal › Exporter.";
-  }
-}
-function icsInfo(){
-  if (!icsData) return "Emploi du temps : trame de ton Excel. Importe le fichier PRONOTE pour avoir les annulations, sorties et remplacements à jour.";
-  const d = new Date(icsData.generated);
-  const old = (Date.now() - d.getTime()) > 30*86400000;
-  return `Emploi du temps : fichier PRONOTE importé le ${d.toLocaleDateString("fr-FR")} à ${pad(d.getHours())}h${pad(d.getMinutes())}.` + (old ? " Il a plus d'un mois : réimporte-le si ton emploi du temps a changé." : " Réimporte-le seulement si ton emploi du temps change.");
-}
-loadIcsLocal();
-
-/* ---------- state ---------- */
-let offers = [];
-let rcd = new Map();      // id -> {date, debut, fin, classe, prof, matiere, salle, statut, source}
-let dispo = new Map();    // id -> {date, creneau, etat:'libre'|'occupe', motif}
-let rcdLoaded = false;
-const STORE = "rcd-pagnol-v1";
-let filterSlot = null;    // {date, si}
-let selCell = null;       // {date, si}
-let weekIdx = currentWeekIdx();
-let pending = new Set();
-let showCap = false;
-const isMine = c => { const k = (c||"").toUpperCase().replace(/\s+/g,""); return MES_CLASSES.some(m => k.startsWith(m)); };
-const MES_NIVEAUX = new Set(MES_CLASSES.map(c => c[0]));
-const isMyLevel = c => !isMine(c) && MES_NIVEAUX.has((c||"").trim()[0]);
-const niveauTxt = c => ({"6":"6e","5":"5e","4":"4e","3":"3e"})[(c||"").trim()[0]] || "";
-const rcdSlots = r => overlapSlots(r.debut, r.fin).length || 1;
-const statutOf = r => r.statut==="attente" || r.statut==="annule" ? r.statut : "confirme";
-const endOf = r => { const [y,m,d] = r.date.split("-").map(Number); const mm = toMin(r.fin); return new Date(y, m-1, d, Math.floor(mm/60), mm%60); };
-const isDone = r => statutOf(r)==="confirme" && endOf(r) <= new Date();
-/* état affiché : effectue (confirmé + heure de fin passée), confirme, attente, verif (attente dont la date est passée), annule */
-function etatOf(r){
-  const s = statutOf(r);
-  if (s==="annule") return "annule";
-  if (s==="attente") return endOf(r) <= new Date() ? "verif" : "attente";
-  return isDone(r) ? "effectue" : "confirme";
-}
-const ETAT_LABEL = {effectue:"effectué", confirme:"confirmé", attente:"en attente", verif:"en attente · à vérifier sur PRONOTE", annule:"annulé"};
-const ETAT_CLASS = {effectue:"fait", confirme:"confirme", attente:"attente", verif:"verif", annule:"annule"};
-
-/* what occupies (date, slot)? */
-function cellState(date, si, ignoreId){
-  for (const [id,r] of rcd){
-    if (id===ignoreId || r.date!==date || statutOf(r)==="annule") continue;
-    if (overlapSlots(r.debut, r.fin).includes(si)) return {free:false, kind:"rcd", label:"RCD "+(r.classe||""), sub:shortProf(r.prof), id};
-  }
-  const ov = dispo.get(slotKey(date,si));
-  const w = weekOf(date);
-  let base = icsBase(date, si);
-  if (base) {}
-  else if (!w || w.day>4) base = {free:false, kind:"hors", label:"hors planning"};
-  else {
-    const code = WEEKS[w.wi].g[w.day][si];
-    if (code==="L") base = {free:true, kind:"libre", label:"libre"};
-    else if (code.startsWith("L:")) base = {free:true, kind:"libre", label:"libre", sub:code.slice(2)};
-    else if (code==="V") base = {free:true, kind:"vend", label:"libre", sub:"jour sans cours"};
-    else if (code==="X") base = {free:false, kind:"ferme", label:"fermé"};
-    else if (code==="F") base = {free:false, kind:"ferie", label:"férié"};
-    else base = {free:false, kind:"cours", label:code.replace(" > "," › ")};
-  }
-  if (ov){
-    if (ov.etat==="libre") return {free:true, kind:"ovl", label:"libéré", sub: ov.motif || base.label, base};
-    if (ov.etat==="occupe") return {free:false, kind:"ovo", label: ov.motif || "indisponible", sub: base.kind==="cours" ? base.label : "", base};
-  }
-  return base;
-}
-const shortProf = p => (p||"").replace(/^(Mme|M\.|MME)\s*/,"");
-
-function classify(o){
-  const slots = overlapSlots(o.start, o.end);
-  const myId = o.date+"_"+o.start.replace("h","");
-  const mine = rcd.get(myId);
-  const noted = !!(mine && (mine.classe||"").toUpperCase()===(o.classe||"").toUpperCase());
-  if (!slots.length) return {...o, slots, free:false, reason:"hors de ta grille horaire", noted, myId};
-  const states = slots.map(si => cellState(o.date, si, noted ? myId : null));
-  const blocking = states.find(s => !s.free);
-  const fri = states.some(s => s.kind==="vend");
-  let reason = "";
-  if (blocking){
-    reason = blocking.kind==="cours" ? "tu as cours ("+blocking.label+")" :
-             blocking.kind==="rcd" || blocking.kind==="rcdp" ? "déjà un remplacement ("+blocking.label.replace("RCD ","")+")" :
-             blocking.kind==="abs" ? "tu es absent ("+blocking.label.toLowerCase()+")" :
-             blocking.kind==="ovo" ? blocking.label :
-             blocking.kind==="hors" ? "semaine hors planning (vacances ?)" : blocking.label;
-  }
-  return {...o, slots, free: !blocking, reason, fri, noted, myId, states};
-}
-
-/* ---------- rendering helpers ---------- */
-const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const clsChip = c => `<span class="cls${isMine(c)?" me":""}">${esc(c||"?")}</span>`;
-
-function renderHeader(){
-  document.getElementById("mineChips").innerHTML = MES_CLASSES.map(c=>`<span class="cls me">${c}</span>`).join("");
-  const box = document.getElementById("pacte");
-  document.getElementById("mineCount").textContent = rcdLoaded ? [...rcd.values()].filter(r=>statutOf(r)!=="annule").length : "";
-  if (!rcdLoaded) return;
-  let done=0, next=0, wait=0;
-  const list = [...rcd.values()].filter(r=>statutOf(r)!=="annule").sort((a,b)=>endOf(a)-endOf(b));
-  for (const r of list){
-    const n = rcdSlots(r), e = etatOf(r);
-    if (e==="effectue") done+=n; else if (e==="confirme") next+=n; else wait+=n;
-  }
-  // date à laquelle la 18e heure confirmée est (ou sera) faite
-  let cum=0, reach=null;
-  for (const r of list){ if (statutOf(r)!=="confirme") continue; cum += rcdSlots(r); if (cum>=PACTE){ reach=r; break; } }
-  const nextR = list.find(r => statutOf(r)==="confirme" && endOf(r) > new Date());
-  // créneaux libres restants (en semaine) jusqu'à la fin de l'année
-  const now = new Date(); let freeLeft = 0;
-  for (const W of WEEKS){ for (let d=0; d<4; d++){
-    const date = iso(new Date(parseIso(W.m).getTime()+d*86400000));
-    SLOTS.forEach(([a],si)=>{ const [y,m,dd]=date.split("-").map(Number); const st=new Date(y,m-1,dd,Math.floor(toMin(a)/60),toMin(a)%60);
-      if (st>now && cellState(date,si).free) freeLeft++; });
-  }}
-  const scale = Math.max(PACTE, done+next+wait);
-  const pct = v => (v/scale*100)+"%";
-  let status, ok=false;
-  if (done>=PACTE){ ok=true; status = `✓ Pacte terminé le ${fmtShort(reach.date)}` + (done>PACTE ? ` · ${done-PACTE} h au-delà du pacte` : ""); }
-  else if (done+next>=PACTE){ ok=true; status = `Pacte bouclé : il sera terminé après le RCD du ${fmtShort(reach.date)}`; }
-  else { const rest = PACTE-done-next; status = `Encore ${rest} h à trouver` + (wait?` (${wait} en attente de confirmation)`:"") + ` · ${freeLeft} créneaux libres en semaine d'ici le 2 juil.`; }
-  const total = done+next+wait+freeLeft, nbPactes = Math.floor(total/PACTE), extra = Math.max(0, nbPactes-1), resteH = total - nbPactes*PACTE;
-  const capTxt = `${done+next+wait} h déjà prises (effectuées, confirmées ou en attente) + ${freeLeft} créneaux libres du lundi au jeudi d'ici le 2 juillet = ${total} h possibles, soit ${nbPactes} pacte${nbPactes>1?"s":""} de 18 h au total : celui en cours + ${extra} supplémentaire${extra>1?"s":""}${resteH?` (et ${resteH} h de reste)`:""}. C'est un maximum théorique : il faudrait un remplacement sur chacun de tes créneaux libres.`;
-  box.classList.toggle("complete", done>=PACTE);
-  box.innerHTML = `<div class="lbl"><span>Pacte RCD 2026-2027 <button class="cap" data-act="cap" aria-expanded="${showCap}" title="${esc(capTxt)}">+${extra} pacte${extra>1?"s":""} possible${extra>1?"s":""}</button></span><span><b id="pacteNum">${done}</b> / ${PACTE} h <span class="done-lbl">effectuées</span></span></div>
-    <div class="meter"><span class="m-done" style="width:${pct(done)}" title="${done} h effectuées"></span><span class="m-next" style="width:${pct(next)}" title="${next} h confirmées à venir"></span><span class="m-wait" style="width:${pct(wait)}" title="${wait} h en attente"></span>${scale>PACTE?`<span class="m-mark" style="left:${pct(PACTE)}" title="18 h"></span>`:""}</div>
-    <div class="legend-mini"><span><i style="background:var(--accent)"></i>${done} effectuées</span><span><i style="background:repeating-linear-gradient(135deg,var(--accent) 0 3px,var(--accent-soft) 3px 6px)"></i>${next} confirmées à venir</span><span><i style="background:var(--accent-soft)"></i>${wait} en attente</span></div>
-    <div class="pacte-status${ok?" ok":""}">${esc(status)}</div>
-    ${showCap?`<div class="cap-expl">${esc(capTxt)}</div>`:""}
-    ${nextR?`<div class="pacte-next">Prochain : ${fmtShort(nextR.date)} · ${esc(nextR.debut)} · ${esc(nextR.classe||"classe ?")}${nextR.salle?` · salle ${esc(nextR.salle)}`:""}</div>`:""}`;
-}
-
-function offerRow(c, showReason){
-  const subj = esc(c.prof||"Professeur absent");
-  const tags = (isMyLevel(c.classe)?`<span class="tag math">niveau ${niveauTxt(c.classe)}</span>`:"") + (c.noted?`<span class="tag done">volontaire noté</span>`:"") + (c.deja && !c.noted?`<span class="tag done">volontaire sur PRONOTE</span>`:"");
-  const st = c.statut ? (/pas d'autre/i.test(c.statut) ? `<span>${esc(c.statut)}</span>` : `<span class="tag other">${esc(c.statut)}</span>`) : "";
-  let act = "";
-  if (c.free || c.noted){
-    act = c.noted
-      ? `<button class="btn small ghost" data-act="unnote" data-id="${c.myId}">Retirer</button>`
-      : `<button class="btn small primary" data-act="note" data-i="${c.idx}">Je me suis porté volontaire</button>`;
   }
 
-  return `<div class="offer">${clsChip(c.classe)}<div class="what"><div class="subj">${subj}${tags}</div><div class="meta">${esc((c.matiere||"").toLowerCase())}${c.salle?` · salle ${esc(c.salle)}`:""}${st?" · ":""}${st}</div></div><div class="act">${act}</div></div>`;
-}
-
-function groupBySlot(list, mode){
-  const g = new Map();
-  for (const c of list){ const k = c.date+"|"+c.start+"|"+c.end; if (!g.has(k)) g.set(k, []); g.get(k).push(c); }
-  let html = "";
-  for (const [k, items] of g){
-    const [date, start, end] = k.split("|");
-    const c0 = items[0];
-    let state;
-    if (mode==="free") state = `<span class="state ok">${c0.fri ? "créneau libre · vendredi (jour sans cours)" : (c0.states||[]).some(s=>s.kind==="ovl") ? "créneau libéré par toi" : "créneau libre"}</span>`;
-    else state = `<span class="row"><span class="state bad">${esc(c0.reason)}</span>${c0.slots.length && !/déjà un remplacement|fermé|férié|hors/.test(c0.reason) ? `<button class="btn small" data-act="free" data-i="${c0.idx}">Je suis libre sur ce créneau</button>`:""}</span>`;
-    const si = c0.slots[0] ?? -1;
-    html += `<div class="slot"><div class="slot-h"><button class="when" data-act="goto" data-date="${date}" data-si="${si}">${fmtShort(date)} · ${start}–${end}</button>${state}</div>${items.map(c=>offerRow(c, mode!=="free")).join("")}</div>`;
+  async function pull() {
+    if (!token() || pushing) return;
+    state = "sync"; render();
+    try {
+      const remote = await getRemote();
+      if (remote === null || isDirty()) await push(true);
+      else { if (remote !== cfg.getText()) apply(remote); state = "ok"; lastSync = new Date(); if (cfg.onSynced) cfg.onSynced(); render(); }
+    } catch (e) { fail(e); }
   }
-  return html;
-}
-
-function nextSchoolDays(n){
-  const out = []; let d = parseIso(todayIso);
-  const nowMin = new Date().getHours()*60 + new Date().getMinutes();
-  for (let k=0; k<14 && out.length<n; k++, d = new Date(d.getTime()+86400000)){
-    const ds = iso(d); if (dow(ds)>4) continue;
-    const states = SLOTS.map((_,si)=>cellState(ds,si));
-    if (states.every(s=>["ferie","hors","ferme"].includes(s.kind))) continue;
-    const isToday = ds===todayIso;
-    if (isToday && nowMin >= SLOT_MIN[SLOTS.length-1][1]) continue;
-    out.push({date:ds, isToday, free: states.map((s,si)=>({s,si})).filter(x=>x.s.free && (!isToday || SLOT_MIN[x.si][1] > nowMin))});
+  async function push(force) {
+    if (!token()) return;
+    if (pushing) { again = true; return; }
+    pushing = true; state = "sync"; render();
+    try {
+      if (!sha && !force) { try { await getRemote(); } catch (e) {} }
+      await putRemote(cfg.getText());
+      setDirty(false); state = "ok"; lastSync = new Date(); if (cfg.onSynced) cfg.onSynced();
+    } catch (e) { pushing = false; fail(e); return; }
+    pushing = false; render();
+    if (again) { again = false; push(); }
   }
-  return out;
-}
-function renderToday(all){
-  const el = document.getElementById("today"); if (!el) return;
-  const tomorrow = iso(new Date(parseIso(todayIso).getTime()+86400000));
-  const days = nextSchoolDays(2);
-  el.innerHTML = days.map((day, idx) => {
-    const fri = dow(day.date)===4;
-    const chips = day.free.map(({si}) => {
-      const n = all.filter(c => c.date===day.date && c.slots.includes(si) && (c.free||c.noted)).length;
-      if (fri && !n) return "";
-      return `<button class="chip${n?" has":""}" data-act="goto" data-date="${day.date}" data-si="${si}" title="${n} cours à pourvoir">${SLOTS[si][0]}${n?` · ${n}`:""}</button>`;
-    }).join("");
-    const mine = [...rcd.values()].filter(r => r.date===day.date && statutOf(r)!=="annule").sort((a,b)=>a.debut.localeCompare(b.debut));
-    const rcdTxt = mine.length ? `<span class="note">RCD : ${mine.map(r=>`${esc(r.debut)} ${esc(r.classe||"?")}${r.salle?` (salle ${esc(r.salle)})`:""}${statutOf(r)==="attente"?" en attente":""}`).join(", ")}</span>` : "";
-    const label = day.isToday ? "Aujourd'hui" : day.date===tomorrow ? "Demain" : (idx===0 || (idx===1 && days[0].isToday)) ? "Prochain jour de cours" : "Ensuite";
-    const libres = chips || (fri ? `<span class="note">vendredi, jour sans cours</span>` : `<span class="note">aucun créneau libre</span>`);
-    return `<div class="day"><b>${label} · ${fmtShort(day.date)}</b>${libres}${rcdTxt}</div>`;
-  }).join("");
-}
-
-function renderOffers(){
-  const all = offers.map((o,i)=>({...classify(o), idx:i}));
-  all.sort((a,b)=> (a.date+a.start).localeCompare(b.date+b.start) || (isMyLevel(b.classe)-isMyLevel(a.classe)) || (a.classe||"").localeCompare(b.classe||""));
-  const inFilter = c => !filterSlot || (c.date===filterSlot.date && c.slots.includes(filterSlot.si));
-  const shown = all.filter(inFilter);
-  const A = shown.filter(c => (c.free||c.noted) && isMine(c.classe));
-  const B = shown.filter(c => (c.free||c.noted) && !isMine(c.classe));
-  const C = shown.filter(c => !(c.free||c.noted) && isMine(c.classe));
-  const D = shown.filter(c => !(c.free||c.noted) && !isMine(c.classe));
-
-  const cA = all.filter(c=>(c.free||c.noted)&&isMine(c.classe)).length, cB = all.filter(c=>(c.free||c.noted)&&!isMine(c.classe)).length;
-  const cC = all.filter(c=>!(c.free||c.noted)&&isMine(c.classe)).length, cD = all.length-cA-cB-cC;
-  document.getElementById("summary").innerHTML = offers.length ? `
-    <div class="sum s1"><b>${cA}</b><span>mes classes, je suis libre</span></div>
-    <div class="sum s2"><b>${cB}</b><span>autres classes, je suis libre</span></div>
-    <div class="sum s3"><b>${cC}</b><span>mes classes, pas dispo</span></div>
-    <div class="sum s4"><b>${cD}</b><span>autres, pas dispo</span></div>` : "";
-
-  let html = "";
-  if (filterSlot) html += `<div class="filter">Créneau affiché : <b>${fmtShort(filterSlot.date)} · ${SLOTS[filterSlot.si][0]}</b><button class="btn small" data-act="clearfilter">Voir tous les créneaux</button></div>`;
-  if (!offers.length){
-    html += `<div class="empty">Aucune liste analysée. Colle la liste « Remplacements à pourvoir » de PRONOTE pour voir où te positionner.</div>`;
-  } else {
-    html += `<div class="group"><h3>Mes classes · je suis libre <span class="cnt">${A.length}</span></h3><p class="hint">À prendre en priorité : tu connais les élèves.</p>${A.length ? groupBySlot(A,"free") : `<div class="empty">Aucun cours de 3F, 6B, 6C, 6D ou 6E sur un de tes créneaux libres${filterSlot?" à ce créneau":""}.</div>`}</div>`;
-    html += `<div class="group"><h3>Autres classes · je suis libre <span class="cnt">${B.length}</span></h3><p class="hint">Tu y fais maths. Les classes de 6e et de 3e (tes niveaux) remontent en tête de chaque créneau.</p>${B.length ? groupBySlot(B,"free") : `<div class="empty">Aucun autre cours sur tes créneaux libres${filterSlot?" à ce créneau":""}.</div>`}</div>`;
-    html += `<div class="group"><h3>Mes classes · pas disponible <span class="cnt">${C.length}</span></h3><p class="hint">Si ton cours saute (sortie, classe absente…), clique « Je suis libre sur ce créneau » : l'offre remonte en haut.</p>${C.length ? groupBySlot(C,"busy") : `<div class="empty">Rien ici.</div>`}</div>`;
-    html += D.length ? `<details class="more"><summary>Autres cours sur un créneau où tu n'es pas libre (${D.length})</summary>${groupBySlot(D,"busy")}</details>` : "";
+  function changed() {
+    if (!ready || applying) return;
+    setDirty(true);
+    if (!token()) return;
+    clearTimeout(timer); timer = setTimeout(push, 1500);
   }
-  document.getElementById("lists").innerHTML = html;
-  return all;
-}
 
-function renderWeek(all){
-  const wset = [...new Set(offers.map(o => weekOf(o.date)?.wi).filter(v=>v!==undefined))].sort((a,b)=>a-b);
-  weekIdx = Math.max(0, Math.min(WEEKS.length-1, weekIdx));
-  const W = WEEKS[weekIdx];
-  const days = [0,1,2,3,4].map(d => iso(new Date(parseIso(W.m).getTime()+d*86400000)));
-  const cur = currentWeekIdx();
-  let h = `<div class="week-h"><div class="wk-nav"><button class="btn arrow" data-act="wprev" aria-label="Semaine précédente"${weekIdx===0?" disabled":""}>‹</button><div><h2>Semaine ${W.n} <span class="q">· ${W.q}</span></h2><div class="note">du ${fmtShort(days[0])} au ${fmtShort(days[4])}</div></div><button class="btn arrow" data-act="wnext" aria-label="Semaine suivante"${weekIdx===WEEKS.length-1?" disabled":""}>›</button></div>`;
-  h += `<div class="wk-tabs">${weekIdx!==cur?`<button class="btn small" data-act="week" data-w="${cur}">Cette semaine</button>`:""}${wset.filter(i=>i!==weekIdx).map(i=>`<button class="btn small" data-act="week" data-w="${i}" title="Semaine avec des cours à pourvoir">S${WEEKS[i].n} · offres</button>`).join("")}</div>`;
-  h += `</div><div class="grid-scroll"><div class="grid"><div></div>${days.map(d=>`<div class="dh">${fmtShort(d)}</div>`).join("")}`;
-  SLOTS.forEach(([a,b],si)=>{
-    if (si===4) h += `<div class="th" style="font-size:10px">12h35</div><div class="pause"></div>`;
-    h += `<div class="th">${a}</div>`;
-    days.forEach(d=>{
-      const s = cellState(d, si);
-      const here = all.filter(c => c.date===d && c.slots.includes(si));
-      const nMine = here.filter(c=>isMine(c.classe)).length, nOther = here.length-nMine;
-      const cls = {cours:"c-cours",libre:"c-libre",vend:"c-vend",rcd:"c-rcd",ferme:"c-ferme",ferie:"c-ferie",ovl:"c-libre c-ovl",ovo:"c-ovo",hors:"c-ferie",abs:"c-ovo",rcdp:"c-rcd"}[s.kind]||"";
-      const ag = agendaAt(d, si).filter(x=>x.a!==null);
-      const sel = selCell && selCell.date===d && selCell.si===si ? " sel" : "";
-      const badges = here.length ? `<span class="badges">${nMine?`<span class="bdg me" title="${nMine} dans mes classes">${nMine}★</span>`:""}${nOther?`<span class="bdg" title="${nOther} autres classes">${nOther}</span>`:""}</span>` : "";
-      const lab = s.kind==="libre"||s.kind==="vend" ? "" : s.label;
-      h += `<button class="cell ${cls}${sel}" data-act="cell" data-date="${d}" data-si="${si}" aria-label="${fmtLong(d)} ${a} : ${esc(s.label)}"><span><span class="lab">${esc(lab)}</span>${s.sub&&s.kind!=="vend"?`<span class="sub"> ${esc(s.sub)}</span>`:""}${ag.length?`<span class="ag">${esc(ag.map(x=>x.t).join(" · "))}</span>`:""}</span>${badges}</button>`;
-    });
-  });
-  h += `</div></div><div class="grid-legend"><span><i style="background:var(--cours)"></i>cours</span><span><i style="background:var(--libre)"></i>libre</span><span><i style="background:var(--vend)"></i>vendredi</span><span><i style="background:var(--rcd)"></i>RCD noté</span><span><span class="bdg me">2★</span> offres mes classes</span><span><span class="bdg">5</span> autres offres</span></div>`;
-  if (selCell && days.includes(selCell.date)) h += slotPanel(selCell, all);
-  else h += `<div class="slotpanel note">Clique une case verte pour voir les cours à pourvoir à ce moment-là et te positionner. Une case jaune sert à indiquer qu'un cours saute (sortie, classe absente…).</div>`;
-  document.getElementById("week").innerHTML = h;
-}
+  async function connect(tok) {
+    tok = tok.trim();
+    if (!tok) { errMsg = "Colle d'abord ta clé dans la case."; render(); return; }
+    state = "sync"; errMsg = ""; render();
+    let r;
+    try { r = await gh("", {}, tok); } catch (e) { state = "horsligne"; render(); return; }
+    if (r.status === 401) { state = "off"; errMsg = "Cette clé n'est pas reconnue par GitHub. Vérifie que tu l'as copiée en entier."; render(); return; }
+    if (!r.ok) { state = "off"; errMsg = `Je ne trouve pas le dépôt « ${REPO} » avec cette clé. Vérifie qu'il existe et que la clé y a accès.`; render(); return; }
+    ls.set(KEY, tok);
+    try {
+      const remote = await getRemote();
+      if (remote === null) { await push(true); return; }
+      if (remote === cfg.getText()) { setDirty(false); state = "ok"; lastSync = new Date(); render(); return; }
+      let remoteObj = null; try { remoteObj = JSON.parse(remote); } catch (e) {}
+      choice = { remote, here: cfg.summary(JSON.parse(cfg.getText())), there: remoteObj ? cfg.summary(remoteObj) : "données en ligne" };
+      state = "choix"; render();
+    } catch (e) { fail(e); }
+  }
+  function choose(which) {
+    const c = choice; choice = null;
+    if (which === "enligne") { apply(c.remote); setDirty(false); state = "ok"; lastSync = new Date(); if (cfg.onSynced) cfg.onSynced(); render(); }
+    else push(true);
+  }
+  function disconnect() {
+    ls.del(KEY); sha = null; state = "off"; errMsg = ""; render();
+  }
 
-function slotPanel({date, si}, all){
-  const s = cellState(date, si);
-  const here = all.filter(c => c.date===date && c.slots.includes(si))
-    .sort((a,b) => (isMine(b.classe)-isMine(a.classe)) || (isMyLevel(b.classe)-isMyLevel(a.classe)) || (a.classe||"").localeCompare(b.classe||""));
-  const k = slotKey(date, si);
-  const ov = dispo.get(k);
-  const editable = !["rcd","rcdp","ferme","ferie","hors"].includes(s.kind);
-  const desc = {cours:"Tu as cours : "+s.label, libre:"Créneau libre", vend:"Vendredi, jour sans cours", rcd:"Remplacement noté : "+s.label.replace("RCD ","")+(s.sub?" ("+s.sub+")":""), ferme:"Établissement fermé", ferie:"Jour férié", ovl:"Libéré : "+s.sub, ovo:"Indisponible : "+s.label, hors:"Hors planning (vacances)", abs:s.label+" ("+s.sub+") : tu n'es pas là", rcdp:"Remplacement PRONOTE : "+s.label.replace("RCD ","")+" ("+s.sub+")"}[s.kind];
-  const ags = agendaAt(date, si);
-  const motifInput = ph => `<input id="motif" placeholder="${ph}">`;
-  let p = `<div class="slotpanel" id="slotpanel"><h4>${fmtLong(date)} · ${SLOTS[si][0]}–${SLOTS[si][1]}</h4>`;
-  p += `<div class="${s.free?"state-ok":s.kind==="rcd"||s.kind==="rcdp"?"state-rcd":"state-bad"}">${esc(desc)}</div>`;
-  if (ags.length) p += `<div class="note">Agenda PRONOTE : ${ags.map(x=>esc(x.t)+(x.a!==null?` (${hhmm(x.a)}–${hhmm(x.b)})`:" (toute la journée)")).join(" · ")}</div>`;
-  // créneau occupé par un cours : proposer de le libérer AVANT la liste
-  if (editable && !s.free && !ov && here.length){
-    p += `<div class="row">${motifInput("Motif : sortie pédagogique, classe absente…")}<button class="btn small primary" data-act="setfree" data-date="${date}" data-si="${si}">Je suis libre sur ce créneau</button></div>`;
-  }
-  if (here.length){
-    const nMine = here.filter(c=>isMine(c.classe)).length;
-    p += `<div><b>${here.length}</b> cours à pourvoir${nMine?` dont <b>${nMine}</b> dans tes classes`:""}${editable && !s.free ? " (libère le créneau pour te positionner)" : ""}</div>`;
-    p += `<div class="slot">${here.map(c=>offerRow(c,false)).join("")}</div>`;
-  } else if (offers.length) {
-    p += `<div class="note">Aucun cours à pourvoir à ce moment-là dans la liste collée.</div>`;
-  } else {
-    p += `<div class="note">Colle d'abord la liste PRONOTE pour voir les cours à pourvoir.</div>`;
-  }
-  if (editable){
-    if (ov) p += `<div class="row"><button class="btn small" data-act="reset" data-k="${k}">Revenir à l'emploi du temps normal</button></div>`;
-    else if (s.free) p += `<div class="row">${motifInput("Motif : réunion, conseil de classe…")}<button class="btn small" data-act="setbusy" data-date="${date}" data-si="${si}">Je ne suis pas disponible</button></div>`;
-    else if (!here.length) p += `<div class="row">${motifInput("Motif : sortie pédagogique, classe absente…")}<button class="btn small" data-act="setfree" data-date="${date}" data-si="${si}">Je suis libre sur ce créneau</button></div>`;
-  }
-  return p + `</div>`;
-}
-
-function renderMine(){
-  const el = document.getElementById("mineList");
-  if (!rcdLoaded){ el.innerHTML = `<div class="empty">Chargement de tes remplacements…</div>`; return; }
-  if (!rcd.size){ el.innerHTML = `<div class="empty">Aucun remplacement noté. Ils apparaissent ici quand tu cliques « Je me suis porté volontaire » dans l'onglet À pourvoir, ou avec le formulaire.</div>`; return; }
-  const list = [...rcd.entries()].sort((a,b)=>(a[1].date+a[1].debut).localeCompare(b[1].date+b[1].debut));
-  // bilan par classe
-  const byCls = new Map();
-  for (const [,r] of list){ if (statutOf(r)==="annule") continue; const k=r.classe||"?"; byCls.set(k,(byCls.get(k)||0)+rcdSlots(r)); }
-  const verif = list.filter(([,r])=>etatOf(r)==="verif").length;
-  let h = `<div class="bilan"><h3>Bilan</h3><div class="chips">${[...byCls.entries()].sort((a,b)=>b[1]-a[1]).map(([c,n])=>`<span>${clsChip(c)} ${n} h</span>`).join("")}</div>
-    ${verif?`<div class="banner">${verif} remplacement${verif>1?"s":""} encore « en attente » alors que la date est passée : vérifie sur PRONOTE (Mes remplacements passés) puis confirme ou annule.</div>`:""}
-    <div class="row"><button class="btn small" data-act="export">Copier le tableau pour Excel</button><span class="note" id="expMsg"></span></div>
-    <textarea id="expArea" hidden rows="4" style="width:100%;font-family:var(--f-mono);font-size:12px"></textarea></div>`;
-  const byMonth = new Map();
-  for (const e of list){ const k = e[1].date.slice(0,7); if (!byMonth.has(k)) byMonth.set(k, []); byMonth.get(k).push(e); }
-  for (const [k, items] of byMonth){
-    const [y,m] = k.split("-").map(Number);
-    const n = items.reduce((s,[,r])=>s+(statutOf(r)==="annule"?0:rcdSlots(r)),0);
-    h += `<div class="month"><h3>${MOIS_L[m-1][0].toUpperCase()+MOIS_L[m-1].slice(1)} ${y} <span class="note">· ${n} h</span></h3>`;
-    for (const [id, r] of items){
-      const e = etatOf(r), s = statutOf(r), n = rcdSlots(r);
-      h += `<div class="rline${e==="effectue"?" past":""}${e==="annule"?" cancel":""}"><div class="d">${fmtShort(r.date)}<br>${esc(r.debut)}–${esc(r.fin)}</div>
-        <div>${clsChip(r.classe)} <span>${esc(r.prof||"")}${r.matiere?` · ${esc(r.matiere)}`:""}</span> <span class="st ${ETAT_CLASS[e]}">${ETAT_LABEL[e]}</span>${icsData && r.date>=icsData.from && r.date<=icsData.to && s==="confirme" && !(icsData.rempl||{})[id] ? ` <span class="st verif" title="Ce remplacement n'est pas dans le dernier fichier PRONOTE importé">absent de PRONOTE</span>` : ""}<div class="x">${n} h${r.note?` · ${esc(r.note)}`:""}${r.source==="excel"?" · repris de l'Excel":""}</div></div>
-        <div class="row">${s==="attente"?`<button class="btn small primary" data-act="confirm" data-id="${id}">Confirmé sur PRONOTE</button>`:""}<select data-act="statut" data-id="${id}" aria-label="Statut"><option value="attente"${s==="attente"?" selected":""}>En attente</option><option value="confirme"${s==="confirme"?" selected":""}>Confirmé</option><option value="annule"${s==="annule"?" selected":""}>Annulé</option></select>
-        <span data-del="${id}"><button class="btn small ghost danger" data-act="askdel" data-id="${id}">Supprimer</button></span></div></div>`;
+  /* ---------- interface ---------- */
+  const CSS = `
+  .nuage{--n-bg:var(--surface-2,var(--panel2,rgba(127,127,127,.08)));--n-acc:var(--accent,var(--gold,#2b6cb0));--n-acc-ink:var(--accent-ink,var(--gold-ink,#fff));
+    border:1px solid var(--line,rgba(127,127,127,.3));background:var(--n-bg);border-radius:12px;padding:14px 16px;display:grid;gap:10px;margin:0 0 14px}
+  .nuage h3,.nuage h4{margin:0;font-size:16px}
+  .nuage p{margin:0}
+  .nuage .n-st{font-weight:700}
+  .nuage .n-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .nuage input{flex:1 1 260px;min-width:0;font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line,#999);background:var(--surface,var(--panel,#fff));color:inherit}
+  .nuage button{font:inherit;font-weight:700;border-radius:8px;padding:8px 14px;cursor:pointer;border:1px solid var(--line,#999);background:transparent;color:inherit}
+  .nuage button.n-main{background:var(--n-acc);color:var(--n-acc-ink);border-color:var(--n-acc)}
+  .nuage .n-err{color:#d9534f;font-weight:700}
+  .nuage details summary{cursor:pointer;font-weight:700}
+  .nuage ol{margin:8px 0 0;padding-left:20px;display:grid;gap:4px}
+  .nuage code{font-family:ui-monospace,Menlo,monospace;font-size:.92em}
+  .nuage-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;border:1px solid var(--line,rgba(127,127,127,.4));cursor:pointer;background:transparent;color:inherit;font-family:inherit}
+  .nuage-pill i{width:8px;height:8px;border-radius:50%;background:#9aa0a6;display:inline-block}
+  .nuage-pill.ok i{background:#2fbf71}.nuage-pill.sync i{background:#f0b429}.nuage-pill.warn i{background:#e5534b}`;
+  const HOWTO = `<details><summary>Comment obtenir ma clé ? (à faire une seule fois, 3 minutes)</summary><ol>
+    <li>Sur github.com, crée un dépôt nommé <code>${REPO}</code>, coche <b>Private</b> et <b>Add a README file</b>.</li>
+    <li>Clique sur ta photo (en haut à droite) › <b>Settings</b> › <b>Developer settings</b> (tout en bas) › <b>Personal access tokens</b> › <b>Fine-grained tokens</b> › <b>Generate new token</b>.</li>
+    <li>Nom : <code>outils</code>. Expiration : 1 an. <b>Repository access</b> : <i>Only select repositories</i> › <code>${REPO}</code>.</li>
+    <li><b>Permissions</b> › <i>Repository permissions</i> › <b>Contents</b> : <i>Read and write</i>. Puis <b>Generate token</b>.</li>
+    <li>Copie la clé (elle commence par <code>github_pat_</code>) et colle-la ci-dessous. Garde-la dans un endroit sûr : GitHub ne la remontre plus.</li>
+  </ol></details>`;
+  let box = null, pill = null;
+  function render() {
+    if (pill) {
+      const map = { ok: ["ok", "Synchronisé"], sync: ["sync", "Synchronisation…"], horsligne: ["warn", "Hors ligne"], cle: ["warn", "Clé à vérifier"], choix: ["warn", "À confirmer"], off: ["", "Non synchronisé"] };
+      const [c, t] = map[state] || map.off; pill.className = "nuage-pill " + c; pill.innerHTML = `<i></i>${t}`;
     }
-    h += `</div>`;
+    if (!box) return;
+    let h = `<h3>Synchronisation entre navigateurs</h3>`;
+    if (state === "choix") {
+      h += `<p class="n-st">Les données en ligne et celles de ce navigateur sont différentes. Lesquelles garder ?</p>
+        <div class="n-row"><button class="n-main" data-n="enligne">Garder celles en ligne (${choice.there})</button><button data-n="ici">Garder celles de ce navigateur (${choice.here})</button></div>
+        <p>Les autres seront remplacées. Dans le doute, garde celles en ligne.</p>`;
+    } else if (!token()) {
+      h += `<p>Pour retrouver tes données sur <b>tous tes navigateurs</b> (maison, collège, téléphone) sans sauvegarde à faire, colle ta clé GitHub. Une seule fois par navigateur : elle sert à tous tes outils.</p>
+        <div class="n-row"><input type="password" id="nuageCle" placeholder="github_pat_…" autocomplete="off" spellcheck="false" aria-label="Clé GitHub"><button class="n-main" data-n="connect">Connecter</button></div>
+        ${errMsg ? `<p class="n-err">${errMsg}</p>` : ""}${HOWTO}`;
+    } else {
+      const t = { ok: `Synchronisé${lastSync ? " à " + hm(lastSync) : ""} : tes données te suivent sur tous les navigateurs connectés.`,
+        sync: "Synchronisation en cours…", horsligne: "Pas de connexion : tes changements sont gardés ici et seront envoyés dès le retour du réseau.",
+        cle: errMsg, off: "" }[state] || "";
+      h += `<p class="n-st">${t}</p>
+        <div class="n-row"><button data-n="now">Synchroniser maintenant</button><button data-n="off">Déconnecter ce navigateur</button></div>
+        <p>Sur un ordinateur partagé (salle des profs), pense à déconnecter ce navigateur en partant.</p>`;
+      if (state === "cle") h += `<div class="n-row"><input type="password" id="nuageCle" placeholder="Nouvelle clé github_pat_…" autocomplete="off" spellcheck="false" aria-label="Nouvelle clé GitHub"><button class="n-main" data-n="connect">Remplacer la clé</button></div>${HOWTO}`;
+    }
+    box.innerHTML = h;
+  }
+  function onClick(e) {
+    const b = e.target.closest("[data-n]"); if (!b) return;
+    const a = b.dataset.n;
+    if (a === "connect") connect((box.querySelector("#nuageCle") || {}).value || "");
+    else if (a === "now") { if (isDirty()) push(); else pull(); }
+    else if (a === "off") disconnect();
+    else if (a === "enligne" || a === "ici") choose(a);
+  }
+
+  function init(c) {
+    cfg = c;
+    const st = document.createElement("style"); st.textContent = CSS; document.head.appendChild(st);
+    box = document.createElement("div"); box.className = "nuage"; box.id = "nuage"; box.setAttribute("aria-live", "polite");
+    c.mount.prepend(box); box.addEventListener("click", onClick);
+    box.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.id === "nuageCle") connect(e.target.value); });
+    if (c.pillIn) { pill = document.createElement("button"); pill.type = "button"; pill.title = "Synchronisation entre navigateurs";
+      pill.addEventListener("click", () => { if (cfg.reveal) cfg.reveal(); setTimeout(() => box.scrollIntoView({ behavior: "smooth", block: "center" }), 50); }); c.pillIn.appendChild(pill); }
+    ready = true;
+    if (token()) pull(); else render();
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && token() && !isDirty()) pull(); });
+    window.addEventListener("online", () => { if (token()) { if (isDirty()) push(); else pull(); } });
+    window.addEventListener("pagehide", () => { if (isDirty() && token()) { clearTimeout(timer); push(); } });
+  }
+  return { init, changed, on: () => !!token() && state !== "cle" };
+})();
+
+</script>
+<script>
+const PROF = "Cours de M. Zeghoudi";
+const NIVEAUX = [{k:"6e", c:"var(--l6)", hex:"#4f86f7"}, {k:"5e", c:"var(--l5)", hex:"#2fbf86"}, {k:"4e", c:"var(--l4)", hex:"#f07a32"}, {k:"3e", c:"var(--l3)", hex:"#e94e8a"}];
+const NIV = Object.fromEntries(NIVEAUX.map(n=>[n.k,n]));
+const STORE = "qr-zeghoudi-v1";
+qrcode.stringToBytes = qrcode.stringToBytesFuncs["UTF-8"];
+
+let items = [];               // {id, url, niveau, theme, titre, created, updated}
+let casier = "tous";
+let form = {url:"", niveau:"6e", theme:"", titre:""};
+let editingId = null;
+let confirmDel = null;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pad = n => String(n).padStart(2,"0");
+const todayIso = (() => { const d = new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); })();
+
+/* ---------- décor ---------- */
+(function deco(){
+  const syms = ["π","√","∑","42","x²","∞","÷","%","∠","≈","7","∫","Δ","½"];
+  let h = "";
+  for (let i=0;i<22;i++){
+    const s = syms[i % syms.length];
+    h += `<span style="left:${(i*37)%96}%;top:${(i*53)%92}%;font-size:${28+((i*13)%60)}px;--r:${((i*29)%60)-30}deg">${s}</span>`;
+  }
+  $("deco").innerHTML = h;
+})();
+
+/* ---------- liens ---------- */
+function normalizeUrl(raw){
+  let s = (raw||"").trim();
+  if (!s) return {ok:false, empty:true};
+  if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(s)){
+    if (/^[\w-]+(\.[\w-]+)+(\/|$|\?|#|:)/.test(s)) s = "https://" + s; else return {ok:false, msg:"Ce n'est pas un lien. Il doit ressembler à https://…"};
+  }
+  try { const u = new URL(s); if (!/^https?:$/.test(u.protocol)) return {ok:false, msg:"Le lien doit commencer par http:// ou https://"}; return {ok:true, url:u.href, host:u.hostname.replace(/^www\./,"")}; }
+  catch(e){ return {ok:false, msg:"Ce lien n'est pas valide."}; }
+}
+
+/* ---------- QR code ---------- */
+function qrMatrix(text){
+  const q = qrcode(0, "H"); q.addData(text); q.make();
+  const n = q.getModuleCount(), m = [];
+  for (let r=0;r<n;r++){ const row=[]; for (let c=0;c<n;c++) row.push(q.isDark(r,c)); m.push(row); }
+  return m;
+}
+const isFinder = (r,c,n) => (r<7&&c<7) || (r<7&&c>=n-7) || (r>=n-7&&c<7);
+function qrSvg(text, color){
+  const m = qrMatrix(text), n = m.length, q = 3, size = n + q*2;
+  const logoR = Math.max(3, Math.round(n*0.11));  // pastille centrale (niveau H : ~30 % de correction)
+  const cx = size/2, cy = size/2;
+  let d = "";
+  for (let r=0;r<n;r++) for (let c=0;c<n;c++){
+    if (!m[r][c] || isFinder(r,c,n)) continue;
+    const x = c+q, y = r+q;
+    if (Math.hypot(x+.5-cx, y+.5-cy) < logoR+0.6) continue;
+    d += `M${x+.08} ${y+.08}h.84v.84h-.84z`;
+  }
+  const eye = (r,c) => { const x=c+q, y=r+q; return `<rect x="${x+.5}" y="${y+.5}" width="6" height="6" rx="1.6" fill="none" stroke="#1d1140" stroke-width="1"/><rect x="${x+2}" y="${y+2}" width="3" height="3" rx=".8" fill="${color}"/>`; };
+  return `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="QR code" shape-rendering="geometricPrecision">
+    <rect width="${size}" height="${size}" rx="2" fill="#fff"/>
+    <path d="${d}" fill="#1d1140"/>
+    ${eye(0,0)}${eye(0,n-7)}${eye(n-7,0)}
+    <circle cx="${cx}" cy="${cy}" r="${logoR}" fill="#f3c34f" stroke="#fff" stroke-width=".7"/>
+    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-family="Fredoka, Nunito, sans-serif" font-weight="700" font-size="${logoR*1.25}" fill="#3a2500">π</text>
+  </svg>`;
+}
+function cardHtml(it, opts={}){
+  const n = NIV[it.niveau] || NIV["6e"];
+  const u = normalizeUrl(it.url);
+  return `<div class="card${opts.pop?" pop":""}" style="--c:${n.c}">
+    <div class="head"><span class="prof">${esc(PROF)}</span><span class="badge">${esc(n.k)}</span></div>
+    ${it.theme ? `<div class="theme">${esc(it.theme)}</div>` : `<div class="theme" style="color:#9a90b8">Thème</div>`}
+    <a class="qrlink" href="${esc(u.url)}" target="_blank" rel="noopener" title="Ouvrir ${esc(u.url)}">${qrSvg(u.url, n.hex)}</a>
+    ${it.titre ? `<div class="titre">${esc(it.titre)}</div>` : ""}
+    <div class="scan">Scanne-moi ou clique-moi !</div>
+    <div class="host">${esc(u.host)}</div>
+  </div>`;
+}
+
+/* ---------- PNG à télécharger (carte complète, haute définition) ---------- */
+async function cardPng(it){
+  await (document.fonts ? document.fonts.ready : Promise.resolve());
+  const n = NIV[it.niveau] || NIV["6e"], u = normalizeUrl(it.url);
+  const W = 1000, pad = 60, qrSize = 640;
+  const lines = (ctx, text, maxW) => { const words = text.split(/\s+/); const out=[]; let cur=""; for (const w of words){ const t = cur ? cur+" "+w : w; if (ctx.measureText(t).width > maxW && cur){ out.push(cur); cur=w; } else cur=t; } if (cur) out.push(cur); return out; };
+  const cv = document.createElement("canvas"); const ctx = cv.getContext("2d");
+  ctx.font = "700 58px Fredoka, Nunito, sans-serif"; const themeL = it.theme ? lines(ctx, it.theme, W-2*pad) : [];
+  ctx.font = "700 36px Nunito, sans-serif"; const titreL = it.titre ? lines(ctx, it.titre, W-2*pad) : [];
+  const H = 40 + 70 + 30 + themeL.length*68 + 30 + qrSize + 30 + titreL.length*46 + 60 + 40 + 40;
+  cv.width = W; cv.height = H;
+  const rr = (x,y,w,h,r) => { ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); };
+  ctx.fillStyle = n.hex; rr(0,0,W,H,48); ctx.fill();
+  ctx.fillStyle = "#fff"; rr(18,18,W-36,H-36,34); ctx.fill();
+  let y = 40 + 50;
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = n.hex; ctx.font = "700 38px Fredoka, Nunito, sans-serif"; ctx.textAlign = "left"; ctx.fillText(PROF, pad, y);
+  ctx.font = "700 46px Fredoka, Nunito, sans-serif"; const bw = ctx.measureText(n.k).width + 44;
+  ctx.fillStyle = n.hex; rr(W-pad-bw, y-36, bw, 72, 18); ctx.fill(); ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.fillText(n.k, W-pad-bw/2, y+2);
+  y += 70;
+  ctx.fillStyle = "#1d1140"; ctx.font = "700 58px Fredoka, Nunito, sans-serif";
+  for (const l of themeL){ ctx.fillText(l, W/2, y); y += 68; }
+  y += 10;
+  // QR
+  const m = qrMatrix(u.url), N = m.length, q = 3, cell = qrSize/(N+q*2), x0 = (W-qrSize)/2, y0 = y;
+  const logoR = Math.max(3, Math.round(N*0.11)), cxm = (N+2*q)/2;
+  ctx.fillStyle = "#1d1140";
+  for (let r=0;r<N;r++) for (let c=0;c<N;c++){
+    if (!m[r][c] || isFinder(r,c,N)) continue;
+    if (Math.hypot(c+q+.5-cxm, r+q+.5-cxm) < logoR+0.6) continue;
+    ctx.fillRect(x0+(c+q)*cell+cell*.08, y0+(r+q)*cell+cell*.08, cell*.84, cell*.84);
+  }
+  for (const [r,c] of [[0,0],[0,N-7],[N-7,0]]){
+    const X = x0+(c+q)*cell, Y = y0+(r+q)*cell;
+    ctx.strokeStyle = "#1d1140"; ctx.lineWidth = cell; rr(X+cell*.5, Y+cell*.5, cell*6, cell*6, cell*1.6); ctx.stroke();
+    ctx.fillStyle = n.hex; rr(X+cell*2, Y+cell*2, cell*3, cell*3, cell*.8); ctx.fill();
+  }
+  ctx.fillStyle = "#f3c34f"; ctx.beginPath(); ctx.arc(x0+cxm*cell, y0+cxm*cell, logoR*cell, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#3a2500"; ctx.font = `700 ${Math.round(logoR*cell*1.25)}px Fredoka, Nunito, sans-serif`; ctx.fillText("π", x0+cxm*cell, y0+cxm*cell+2);
+  y += qrSize + 40;
+  ctx.fillStyle = "#4a3d70"; ctx.font = "700 36px Nunito, sans-serif";
+  for (const l of titreL){ ctx.fillText(l, W/2, y); y += 46; }
+  ctx.fillStyle = n.hex; ctx.font = "600 34px Fredoka, Nunito, sans-serif"; ctx.fillText("Scanne-moi !", W/2, y+10);
+  ctx.fillStyle = "#7a6e98"; ctx.font = "600 24px Nunito, sans-serif"; ctx.fillText(u.host, W/2, y+56);
+  return new Promise(ok => cv.toBlob(ok, "image/png"));
+}
+function downloadBlob(blob, name){
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+}
+const slug = s => (s||"qr").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^\w]+/g,"-").replace(/^-|-$/g,"").toLowerCase().slice(0,40) || "qr";
+
+/* ---------- enregistrement ---------- */
+const snapshot = () => JSON.stringify({app:"qr-zeghoudi", version:1, items});
+function save(){
+  try { localStorage.setItem(STORE, snapshot()); } catch(e){ showBanner("Ce navigateur bloque l'enregistrement (navigation privée ?) : tes QR codes seront perdus à la fermeture."); }
+  scheduleAutoSave();
+}
+function load(){
+  try { const s = localStorage.getItem(STORE); if (s){ const o = JSON.parse(s); items = Array.isArray(o.items) ? o.items : []; return true; } } catch(e){}
+  return false;
+}
+function showBanner(html){ const b = $("banner"); b.innerHTML = html; b.hidden = false; }
+
+/* ---------- rendu ---------- */
+function renderCasiers(){
+  const counts = {tous: items.length}; NIVEAUX.forEach(n => counts[n.k] = items.filter(i=>i.niveau===n.k).length);
+  $("casiers").innerHTML = [{k:"tous", label:"Tous", c:"var(--pink)"}, ...NIVEAUX.map(n=>({k:n.k, label:n.k, c:n.c}))]
+    .map(x => `<button class="casier" style="--c:${x.c}" aria-pressed="${casier===x.k}" data-casier="${x.k}"><span><span class="dot"></span>${x.k==="tous"?"Tous":"Casier "+x.label}</span><span class="n">${counts[x.k]}</span></button>`).join("");
+}
+function renderNiveaux(){
+  $("niveaux").innerHTML = NIVEAUX.map(n => `<button class="niv" style="--c:${n.c}" aria-pressed="${form.niveau===n.k}" data-niv="${n.k}">${n.k}</button>`).join("");
+  const themes = [...new Set(items.filter(i=>i.niveau===form.niveau).map(i=>i.theme).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"fr"));
+  $("themes").innerHTML = themes.map(t=>`<option value="${esc(t)}">`).join("");
+}
+let lastPreviewKey = "";
+function renderPreview(){
+  const u = normalizeUrl(form.url);
+  const err = $("urlErr");
+  if (!u.ok && !u.empty){ err.textContent = u.msg; err.hidden = false; } else err.hidden = true;
+  $("btnSave").disabled = !u.ok;
+  $("btnSave").textContent = editingId ? "Enregistrer les modifications" : `Ranger dans le casier ${form.niveau}`;
+  const key = JSON.stringify([u.url, form.niveau, form.theme, form.titre]);
+  if (key === lastPreviewKey) return;
+  const pop = u.ok && normalizeUrl(JSON.parse(lastPreviewKey||"[]")[0]||"").url !== u.url;
+  lastPreviewKey = key;
+  $("preview").innerHTML = u.ok ? cardHtml(form, {pop}) + `<div class="row" style="justify-content:center"><button class="mini" data-act="png-form">⬇ Image PNG</button><button class="mini" data-act="proj-form">⛶ Projeter</button></div>`
+    : `<div class="placeholder">Ton QR code apparaîtra ici dès que tu colles un lien.</div>`;
+}
+function renderCollection(){
+  const q = $("search").value.trim().toLowerCase();
+  let list = items.filter(i => casier==="tous" || i.niveau===casier);
+  if (q) list = list.filter(i => [i.theme, i.titre, i.url].some(s => (s||"").toLowerCase().includes(q)));
+  const nv = NIV[casier];
+  $("collTitle").innerHTML = casier==="tous" ? "Tous les casiers" : `Casier <span class="chip" style="--c:${nv.c}">${casier}</span>`;
+  $("collCount").textContent = `${list.length} QR code${list.length>1?"s":""}`;
+  const el = $("collection");
+  if (!list.length){
+    el.innerHTML = `<div class="empty">${items.length ? (q ? "Aucun QR code ne correspond à ta recherche." : "Ce casier est vide. Crée un QR code avec le niveau "+esc(casier)+" pour le remplir.") : "Aucun QR code pour l'instant. Colle un lien dans « Nouveau QR code » pour créer le premier."}</div>`;
+    return;
+  }
+  // regroupement : niveau (si « Tous ») puis thème
+  const groups = new Map();
+  list.sort((a,b) => (casier==="tous" ? a.niveau.localeCompare(b.niveau) : 0) || (a.theme||"~").localeCompare(b.theme||"~","fr") || (b.created||"").localeCompare(a.created||""));
+  for (const it of list){ const k = (casier==="tous" ? it.niveau+" · " : "") + (it.theme || "Sans thème"); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(it); }
+  let h = "";
+  for (const [k, arr] of groups){
+    h += `<div class="theme-group"><h3>${esc(k)} <small>${arr.length}</small></h3><div class="grid">`;
+    for (const it of arr){
+      const del = confirmDel===it.id
+        ? `<span class="mini" style="border-color:#ffb3c9">Supprimer ?</span><button class="mini danger" data-act="del" data-id="${it.id}">Oui</button><button class="mini" data-act="nodel">Non</button>`
+        : `<button class="mini danger" data-act="askdel" data-id="${it.id}">Supprimer</button>`;
+      h += `<div class="item">${cardHtml(it)}<div class="tools"><button class="mini" data-act="proj" data-id="${it.id}">⛶ Projeter</button><button class="mini" data-act="png" data-id="${it.id}">⬇ PNG</button><button class="mini" data-act="print1" data-id="${it.id}">🖨 Imprimer</button><button class="mini" data-act="copy" data-id="${it.id}">Copier le lien</button><button class="mini" data-act="edit" data-id="${it.id}">Modifier</button>${del}</div></div>`;
+    }
+    h += `</div></div>`;
   }
   el.innerHTML = h;
 }
+function render(){ renderCasiers(); renderNiveaux(); renderPreview(); renderCollection(); }
 
-function render(){
-  const ii = document.getElementById("icsInfo"); if (ii) { ii.textContent = icsInfo(); ii.classList.toggle("ics-old", !!icsData && (Date.now() - new Date(icsData.generated).getTime()) > 30*86400000); }
-  renderHeader();
-  const all = renderOffers();
-  renderToday(all);
-  renderWeek(all);
-  renderMine();
+/* ---------- actions ---------- */
+function resetForm(){
+  form = {url:"", niveau: form.niveau, theme:"", titre:""}; editingId = null;
+  $("fUrl").value = ""; $("fTheme").value = ""; $("fTitre").value = "";
+  $("btnCancel").hidden = true; $("atelierTitle").textContent = "Nouveau QR code";
 }
-
-/* ---------- persistence (navigateur) ---------- */
-const SEED = {"rcd": {"2026-09-21_1145": {"date": "2026-09-21", "debut": "11h45", "fin": "12h35", "classe": "6E", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-01_0940": {"date": "2026-10-01", "debut": "09h40", "fin": "10h45", "classe": "", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-01_1145": {"date": "2026-10-01", "debut": "11h45", "fin": "12h35", "classe": "", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-06_1305": {"date": "2026-10-06", "debut": "13h05", "fin": "14h00", "classe": "5E", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-09_0940": {"date": "2026-10-09", "debut": "09h40", "fin": "10h45", "classe": "5D", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-09_1045": {"date": "2026-10-09", "debut": "10h45", "fin": "12h35", "classe": "6B", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-12_1145": {"date": "2026-10-12", "debut": "11h45", "fin": "12h35", "classe": "5A", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-13_1305": {"date": "2026-10-13", "debut": "13h05", "fin": "15h10", "classe": "5E", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-15_0940": {"date": "2026-10-15", "debut": "09h40", "fin": "10h45", "classe": "4A", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-15_1145": {"date": "2026-10-15", "debut": "11h45", "fin": "12h35", "classe": "4D", "prof": "", "matiere": "", "salle": "", "statut": "attente", "source": "excel", "note": "pas encore visible dans l'EDT PRONOTE"}}, "dispo": {"2026-10-08_0840": {"date": "2026-10-08", "creneau": "08h40", "etat": "occupe", "motif": "Abs administrative (réunion)"}}};
-const snapshot = () => JSON.stringify({rcd:Object.fromEntries(rcd), dispo:Object.fromEntries(dispo), ics: icsData || null});
-function save(){
-  scheduleAutoSave();
-  try { localStorage.setItem(STORE, snapshot()); }
-  catch(e){ showBanner("Ce navigateur bloque l'enregistrement (navigation privée ?). Ce que tu notes sera perdu à la fermeture."); }
-}
-function loadStore(obj){
-  rcd = new Map(Object.entries(obj.rcd || {}));
-  dispo = new Map(Object.entries(obj.dispo || {}));
-}
-function write(coll, id, data){
-  const map = coll==="rcd" ? rcd : dispo;
-  data ? map.set(id, data) : map.delete(id);
-  save(); render();
-}
-function showBanner(t){ const b=document.getElementById("dbBanner"); b.textContent=t; b.hidden=false; }
-
-/* ---------- events ---------- */
-let toastTimer = null;
-function showToast(msg){
-  let el = document.getElementById("toast");
-  if (!el){ el = document.createElement("div"); el.id = "toast"; el.className = "toast"; el.setAttribute("role","status"); document.body.appendChild(el); }
-  el.textContent = msg; el.hidden = false;
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 5000);
-}
-function loadText(t, save){
-  offers = parsePronote(t);
-  filterSlot = null; selCell = null;
-  const info = document.getElementById("pasteInfo");
-  if (offers.length){
-    const dates = [...new Set(offers.map(o=>o.date))].sort();
-    const bad = offers.filter(o => !o.classe).length;
-    let at = null;
-    if (save) { at = new Date(); try { localStorage.setItem("rcd-paste-at", at.toISOString()); } catch(e){} }
-    else { try { const s = localStorage.getItem("rcd-paste-at"); if (s) at = new Date(s); } catch(e){} }
-    info.textContent = `${offers.length} cours à pourvoir lus (${dates.length>1?fmtShort(dates[0])+" au "+fmtShort(dates.at(-1)):fmtShort(dates[0])}).` + (bad ? ` Attention : ${bad} cours sans classe reconnue.` : "");
-    const pa = document.getElementById("pasteAt");
-    if (pa) {
-      if (at && !isNaN(at)) {
-        const days = Math.floor((new Date(new Date().toDateString()) - new Date(at.toDateString())) / 86400000);
-        const age = days<=0 ? "à jour (aujourd'hui)" : days===1 ? "d'hier" : `vieille de ${days} jours`;
-        const cls = days<=0 ? "ok" : days===1 ? "mid" : "old";
-        pa.innerHTML = `<span class="fresh ${cls}">Liste ${esc(age)}</span><span>Dernière liste PRONOTE collée le ${at.toLocaleDateString("fr-FR")} à ${pad(at.getHours())}h${pad(at.getMinutes())}.</span>`;
-      } else pa.innerHTML = `<span class="fresh none">Date inconnue</span><span>Colle une nouvelle liste pour enregistrer sa date.</span>`;
-    }
-    const w = weekOf(offers[0].date); if (w) weekIdx = w.wi;
-  } else if (t.trim()) {
-    info.textContent = "Je n'ai reconnu aucun cours dans ce texte. Copie la liste depuis la page « Remplacements à pourvoir » : chaque cours doit contenir une date (08 oct.) et un horaire (08h40 - 09h40).";
-  }
-  if (save) { try{ localStorage.setItem("rcd-paste", t); }catch(e){} }
-  render();
-  if (save) {
-    const all = offers.map(o => classify(o));
-    const libres = all.filter(c => c.free).length, mesLibres = all.filter(c => c.free && isMine(c.classe)).length;
-    showToast(offers.length ? `✓ Nouvelle liste lue : ${offers.length} cours, dont ${libres} sur tes créneaux libres${mesLibres ? ` (${mesLibres} dans tes classes)` : ""}.` : "Aucun cours reconnu dans ce que tu as collé.");
-    const sm = document.getElementById("summary"); sm.classList.remove("flash"); void sm.offsetWidth; sm.classList.add("flash");
-  }
-}
-document.addEventListener("paste", e => {
-  const tgt = e.target;
-  if (tgt && (tgt.tagName==="TEXTAREA" || tgt.tagName==="INPUT")) return;
-  const t = e.clipboardData && e.clipboardData.getData("text");
-  if (t && /\d{1,2}\s*h\s*\d{2}/i.test(t)) { e.preventDefault(); loadText(t, true); switchTab("offers"); }
-});
-document.getElementById("btnEdit").onclick = () => { const box=document.getElementById("pasteBox"); box.hidden=false; const a=document.getElementById("pasteArea"); a.value=""; a.focus(); };
-document.getElementById("btnCancel").onclick = () => { document.getElementById("pasteBox").hidden = true; };
-document.getElementById("btnAnalyse").onclick = () => { const t=document.getElementById("pasteArea").value; if (!t.trim()) return; document.getElementById("pasteBox").hidden = true; loadText(t, true); };
-document.getElementById("pasteArea").addEventListener("paste", () => setTimeout(()=>{ const t=document.getElementById("pasteArea").value; if (/\d{1,2}\s*h\s*\d{2}/i.test(t)){ document.getElementById("pasteBox").hidden = true; loadText(t, true); } }, 0));
-
-document.addEventListener("keydown", e => {
-  if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || document.getElementById("pOffers").hidden) return;
-  if (e.key==="ArrowLeft" && weekIdx>0){ weekIdx--; selCell=null; render(); }
-  if (e.key==="ArrowRight" && weekIdx<WEEKS.length-1){ weekIdx++; selCell=null; render(); }
-});
-
-async function exportTsv(){
-  const rows = [["Date","Jour","Début","Fin","Heures","Classe","Professeur absent","Matière","Statut"]];
-  [...rcd.values()].sort((a,b)=>(a.date+a.debut).localeCompare(b.date+b.debut)).forEach(r=>{
-    const d = parseIso(r.date);
-    rows.push([pad(d.getUTCDate())+"/"+pad(d.getUTCMonth()+1)+"/"+d.getUTCFullYear(), JOURS_L[dow(r.date)], r.debut, r.fin, statutOf(r)==="annule"?0:rcdSlots(r), r.classe||"", r.prof||"", r.matiere||"", ETAT_LABEL[etatOf(r)]]);
-  });
-  const tsv = rows.map(r=>r.join("\t")).join("\n");
-  const msg = document.getElementById("expMsg"), area = document.getElementById("expArea");
-  try { await navigator.clipboard.writeText(tsv); msg.textContent = "Copié : colle-le dans Excel (Ctrl+V)."; }
-  catch(e){ area.hidden=false; area.value=tsv; area.select(); msg.textContent = "Tableau sélectionné ci-dessous : fais Ctrl+C."; }
-}
-setInterval(() => { renderHeader(); if (!document.getElementById("pMine").hidden && !document.activeElement?.closest?.("#mineList")) renderMine(); }, 60000);
-
-/* ---------- export Excel du planning annuel ---------- */
-const EXCELJS_URL = "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js";
-function loadExcelJS(){
-  if (window.ExcelJS) return Promise.resolve();
-  return new Promise((ok, ko) => {
-    const s = document.createElement("script");
-    s.src = EXCELJS_URL; s.onload = () => window.ExcelJS ? ok() : ko(new Error("load"));
-    s.onerror = () => ko(new Error("load"));
-    document.head.appendChild(s);
-  });
-}
-const XL = {
-  cours:"FFFDF6D8", libre:"FFC6E0B4", vend:"FFE2EFDA", gris:"FFD9D9D9", ovo:"FFFCE4D6",
-  effectue:"FF9BC2E6", confirme:"FFBDD7EE", attente:"FFDDEBF7", verif:"FFDDEBF7",
-  head:"FF1D6B58", headTxt:"FFFFFFFF", line:"FFBFBFBF"
+$("fUrl").addEventListener("input", e => { form.url = e.target.value; renderPreview(); });
+$("fTheme").addEventListener("input", e => { form.theme = e.target.value; renderPreview(); });
+$("fTitre").addEventListener("input", e => { form.titre = e.target.value; renderPreview(); });
+$("btnSave").onclick = () => {
+  const u = normalizeUrl(form.url); if (!u.ok) return;
+  const now = new Date().toISOString();
+  const data = {url:u.url, niveau:form.niveau, theme:form.theme.trim(), titre:form.titre.trim()};
+  if (editingId){ items = items.map(i => i.id===editingId ? {...i, ...data, updated:now} : i); $("msg").textContent = `Modifié et rangé dans le casier ${data.niveau}.`; }
+  else { items.push({id: "qr"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), ...data, created:now, updated:now}); $("msg").textContent = `Rangé dans le casier ${data.niveau}${data.theme?" · "+data.theme:""}.`; }
+  casier = data.niveau; save(); resetForm(); lastPreviewKey = ""; render();
 };
-const xlFill = c => ({type:"pattern", pattern:"solid", fgColor:{argb:c}});
-const xlBorder = {top:{style:"thin",color:{argb:XL.line}}, left:{style:"thin",color:{argb:XL.line}}, bottom:{style:"thin",color:{argb:XL.line}}, right:{style:"thin",color:{argb:XL.line}}};
-const sheetName = W => { const a = parseIso(W.m), b = new Date(a.getTime()+4*86400000); return `S${pad(W.n)} ${pad(a.getUTCDate())}.${pad(a.getUTCMonth()+1)}-${pad(b.getUTCDate())}.${pad(b.getUTCMonth()+1)}`; };
-const longDay = s => { const d = parseIso(s); return JOURS_L[dow(s)]+" "+(d.getUTCDate()===1?"1er":d.getUTCDate())+" "+MOIS_L[d.getUTCMonth()]; };
-const cap1 = s => s.charAt(0).toUpperCase()+s.slice(1);
+$("btnCancel").onclick = () => { resetForm(); lastPreviewKey = ""; $("msg").textContent = ""; render(); };
+$("search").addEventListener("input", renderCollection);
 
-/* texte + couleur d'une case du planning */
-function exportCell(date, si){
-  const s = cellState(date, si);
-  if (s.kind==="rcd"){
-    const r = rcd.get(s.id), e = etatOf(r);
-    const who = [r.prof, r.matiere ? r.matiere.toLowerCase() : ""].filter(Boolean).join(" · ");
-    return {text:`RCD ${r.classe||""}${who?"\n"+who:""}\n${ETAT_LABEL[e]}`, fill:XL[e]||XL.confirme, bold:true};
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-casier],[data-niv],[data-act]"); if (!b) return;
+  if (b.dataset.casier){ casier = b.dataset.casier; confirmDel = null; renderCasiers(); renderCollection(); return; }
+  if (b.dataset.niv){ form.niveau = b.dataset.niv; renderNiveaux(); renderPreview(); return; }
+  const a = b.dataset.act, it = items.find(i => i.id===b.dataset.id);
+  if (a==="proj" && it) openProj(it);
+  else if (a==="proj-form") openProj(form);
+  else if (a==="png" && it) downloadBlob(await cardPng(it), `QR-${it.niveau}-${slug(it.theme||it.titre)}.png`);
+  else if (a==="print1" && it) openPrint([it], true);
+  else if (a==="png-form") downloadBlob(await cardPng(form), `QR-${form.niveau}-${slug(form.theme||form.titre)}.png`);
+  else if (a==="copy" && it){ try { await navigator.clipboard.writeText(it.url); b.textContent = "Lien copié ✓"; } catch(err){ b.textContent = it.url; } setTimeout(()=>{ b.textContent = "Copier le lien"; }, 2000); }
+  else if (a==="edit" && it){
+    editingId = it.id; form = {url:it.url, niveau:it.niveau, theme:it.theme||"", titre:it.titre||""};
+    $("fUrl").value = form.url; $("fTheme").value = form.theme; $("fTitre").value = form.titre;
+    $("btnCancel").hidden = false; $("atelierTitle").textContent = "Modifier le QR code"; $("msg").textContent = "";
+    lastPreviewKey = ""; render(); window.scrollTo({top:0, behavior:"smooth"});
   }
-  switch (s.kind){
-    case "cours": return {text:s.label.replace(" › "," > ")+"\n106", fill:XL.cours};
-    case "libre": return {text:"LIBRE"+(s.sub?"\n("+s.sub+")":""), fill:XL.libre};
-    case "vend":  return {text:"LIBRE", fill:XL.vend};
-    case "ferme": return {text:"établissement fermé", fill:XL.gris};
-    case "ferie": return {text:"FÉRIÉ", fill:XL.gris};
-    case "ovl":   return {text:"LIBÉRÉ"+(s.sub?"\n"+s.sub:""), fill:XL.libre};
-    case "ovo":   return {text:s.label+(s.sub?"\n("+s.sub+")":""), fill:XL.ovo};
-    case "abs":   return {text:s.label+"\n("+s.sub+")", fill:XL.ovo};
-    case "rcdp":  return {text:s.label+"\n"+s.sub+"\nconfirmé (PRONOTE)", fill:XL.confirme, bold:true};
-    default:      return {text:"", fill:XL.gris};
-  }
-}
-
-async function buildWorkbook(){
-  await loadExcelJS();
-  const wb = new ExcelJS.Workbook();
-  wb.creator = "RCD Pagnol"; wb.created = new Date();
-  const now = new Date();
-  const list = [...rcd.values()].sort((a,b)=>(a.date+a.debut).localeCompare(b.date+b.debut));
-  const active = list.filter(r=>statutOf(r)!=="annule");
-  const sumH = f => active.filter(f).reduce((s,r)=>s+rcdSlots(r),0);
-  const done = sumH(r=>etatOf(r)==="effectue"), next = sumH(r=>etatOf(r)==="confirme"), wait = sumH(r=>["attente","verif"].includes(etatOf(r)));
-
-  /* ---- Sommaire ---- */
-  const som = wb.addWorksheet("Sommaire", {views:[{showGridLines:false}]});
-  som.columns = [{width:10},{width:8},{width:44},{width:16},{width:14},{width:14},{width:30}];
-  som.getCell("A1").value = "Planning des remplacements de courte durée (RCD) — 2026-2027";
-  som.getCell("A1").font = {bold:true, size:16, color:{argb:XL.head}};
-  som.getCell("A2").value = "Collège Marcel Pagnol, Bonnières-sur-Seine · salle 106 · exporté le "+longDay(todayIso)+" à "+pad(now.getHours())+"h"+pad(now.getMinutes());
-  som.getCell("A2").font = {italic:true, color:{argb:"FF595959"}};
-  const pacteRows = [
-    ["Heures effectuées", done], ["Heures confirmées à venir", next], ["Heures en attente de confirmation", wait],
-    ["Total des heures prises", done+next+wait], ["Pacte RCD", 18],
-    ["État du pacte", done>=18 ? `terminé (${done-18} h au-delà)` : done+next>=18 ? "bouclé, en cours de réalisation" : `il reste ${18-done-next} h à trouver`]
-  ];
-  pacteRows.forEach(([k,v],i)=>{ const r = som.getRow(4+i); r.getCell(1).value = k; r.getCell(4).value = v; r.getCell(1).font={bold:i===3}; r.getCell(4).font={bold:true}; som.mergeCells(4+i,1,4+i,3); });
-  let row = 11;
-  const hdr = som.getRow(row);
-  ["Semaine","Type","Période","Créneaux libres (lun.–jeu.)","RCD effectués (h)","RCD prévus (h)","Onglet"].forEach((t,i)=>{ const c=hdr.getCell(i+1); c.value=t; c.font={bold:true,color:{argb:XL.headTxt}}; c.fill=xlFill(XL.head); c.border=xlBorder; c.alignment={vertical:"middle",wrapText:true}; });
-  hdr.height = 30;
-  let totFree=0, totDone=0, totNext=0;
-  for (const W of WEEKS){
-    row++;
-    const days = [0,1,2,3,4].map(d=>iso(new Date(parseIso(W.m).getTime()+d*86400000)));
-    let free = 0; for (let d=0; d<4; d++) SLOTS.forEach((_,si)=>{ if (cellState(days[d],si).free) free++; });
-    const wk = active.filter(r=>r.date>=days[0] && r.date<=days[4]);
-    const wDone = wk.filter(r=>etatOf(r)==="effectue").reduce((s,r)=>s+rcdSlots(r),0);
-    const wNext = wk.filter(r=>etatOf(r)!=="effectue").reduce((s,r)=>s+rcdSlots(r),0);
-    totFree+=free; totDone+=wDone; totNext+=wNext;
-    const r = som.getRow(row);
-    r.values = [`S${pad(W.n)}`, W.q, `du ${longDay(days[0])} au ${longDay(days[4])}`, free, wDone||"", wNext||"", {text:"Ouvrir "+sheetName(W), hyperlink:`#'${sheetName(W)}'!A1`}];
-    r.getCell(7).font = {color:{argb:"FF0563C1"}, underline:true};
-    r.eachCell(c=>c.border=xlBorder);
-    if (wDone||wNext) [5,6].forEach(i=>r.getCell(i).fill=xlFill(XL.confirme));
-  }
-  row++;
-  const tr = som.getRow(row); tr.values = ["","","Total", totFree, totDone, totNext]; tr.font = {bold:true}; tr.eachCell(c=>c.border=xlBorder);
-  som.getRow(row+2).getCell(1).value = "Créneaux libres : du lundi au jeudi, hors remplacements déjà pris. Une case bleue = un remplacement noté (foncé : effectué, moyen : confirmé, clair : en attente).";
-  som.getRow(row+2).getCell(1).font = {italic:true, size:9, color:{argb:"FF595959"}};
-
-  /* ---- Mes RCD ---- */
-  const ws = wb.addWorksheet("Mes RCD", {views:[{state:"frozen", ySplit:1}]});
-  ws.columns = [
-    {header:"Date", key:"date", width:12}, {header:"Jour", key:"jour", width:11}, {header:"Début", key:"debut", width:8}, {header:"Fin", key:"fin", width:8},
-    {header:"Heures", key:"h", width:8}, {header:"Classe", key:"classe", width:9}, {header:"Professeur absent", key:"prof", width:24},
-    {header:"Matière", key:"mat", width:20}, {header:"Salle", key:"salle", width:9}, {header:"Statut", key:"st", width:30}, {header:"Cumul effectué (h)", key:"cum", width:12}
-  ];
-  ws.getRow(1).eachCell(c=>{ c.font={bold:true,color:{argb:XL.headTxt}}; c.fill=xlFill(XL.head); c.alignment={vertical:"middle",wrapText:true}; });
-  ws.getRow(1).height = 30;
-  let cum = 0;
-  for (const r of list){
-    const e = etatOf(r), h = statutOf(r)==="annule" ? 0 : rcdSlots(r);
-    if (e==="effectue") cum += h;
-    const d = parseIso(r.date);
-    const xr = ws.addRow({date:new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())), jour:JOURS_L[dow(r.date)], debut:r.debut, fin:r.fin, h, classe:r.classe||"", prof:r.prof||"", mat:r.matiere||"", salle:r.salle||"", st:ETAT_LABEL[e], cum: e==="effectue" ? cum : ""});
-    xr.getCell("date").numFmt = "dd/mm/yyyy";
-    xr.eachCell({includeEmpty:true}, c=>c.border=xlBorder);
-    xr.getCell("st").fill = xlFill(e==="annule" ? XL.gris : XL[e]||XL.confirme);
-  }
-  const last = ws.rowCount;
-  const tot = ws.addRow({prof:"Total (hors annulés)", h: last>1 ? {formula:`SUM(E2:E${last})`, result: active.reduce((s,r)=>s+rcdSlots(r),0)} : 0});
-  tot.font = {bold:true};
-  if (last>1) ws.autoFilter = {from:"A1", to:`K${last}`};
-
-  /* ---- une feuille par semaine ---- */
-  for (const W of WEEKS){
-    const sh = wb.addWorksheet(sheetName(W), {views:[{showGridLines:false}]});
-    const days = [0,1,2,3,4].map(d=>iso(new Date(parseIso(W.m).getTime()+d*86400000)));
-    sh.columns = [{width:14},{width:24},{width:24},{width:24},{width:24},{width:24}];
-    sh.getCell("A1").value = `Semaine ${W.n}  ·  ${W.q}  ·  du ${longDay(days[0])} au ${longDay(days[4])} ${days[4].slice(0,4)}`;
-    sh.getCell("A1").font = {bold:true, size:14, color:{argb:XL.head}};
-    const h = sh.getRow(3);
-    h.values = ["Horaire", ...days.map(d=>cap1(longDay(d)))];
-    h.eachCell(c=>{ c.font={bold:true,color:{argb:XL.headTxt}}; c.fill=xlFill(XL.head); c.alignment={horizontal:"center",vertical:"middle"}; c.border=xlBorder; });
-    h.height = 22;
-    let rr = 4, wkH = 0;
-    SLOTS.forEach(([a,b], si)=>{
-      if (si===4){
-        const p = sh.getRow(rr++); p.values = ["12h35 - 13h05", "pause méridienne","pause méridienne","pause méridienne","pause méridienne","pause méridienne"];
-        p.eachCell(c=>{ c.fill=xlFill(XL.gris); c.font={italic:true,size:9,color:{argb:"FF7F7F7F"}}; c.alignment={horizontal:"center",vertical:"middle"}; c.border=xlBorder; });
-        p.height = 16;
-      }
-      const r = sh.getRow(rr++);
-      r.getCell(1).value = `${a} - ${b}`; r.getCell(1).font = {bold:true}; r.getCell(1).alignment = {vertical:"middle"}; r.getCell(1).border = xlBorder;
-      days.forEach((d, di)=>{
-        const x = exportCell(d, si), c = r.getCell(di+2);
-        c.value = x.text; c.fill = xlFill(x.fill); c.border = xlBorder;
-        c.alignment = {horizontal:"center", vertical:"middle", wrapText:true};
-        c.font = {bold:!!x.bold, size:10};
-      });
-      r.height = 46;
-    });
-    const wk = active.filter(r=>r.date>=days[0] && r.date<=days[4]);
-    wk.forEach(r=>wkH+=rcdSlots(r));
-    rr++;
-    sh.getRow(rr++).getCell(1).value = `Remplacements cette semaine : ${wkH} h` + (wk.length ? " — " + wk.map(r=>`${JOURS[dow(r.date)]} ${r.debut} ${r.classe||"?"}`).join(", ") : "");
-    sh.getRow(rr++).getCell(1).value = "Légende : jaune = cours · vert = créneau libre · vert pâle = vendredi · bleu = remplacement (foncé effectué, moyen confirmé, clair en attente) · orange = indisponible · gris = fermé / férié";
-    sh.getRow(rr-1).getCell(1).font = {italic:true, size:9, color:{argb:"FF595959"}};
-    const back = sh.getRow(rr).getCell(1); back.value = {text:"Retour au sommaire", hyperlink:"#'Sommaire'!A1"}; back.font = {color:{argb:"FF0563C1"}, underline:true};
-    sh.pageSetup = {orientation:"landscape", fitToPage:true, fitToWidth:1, fitToHeight:1};
-  }
-  const buf = await wb.xlsx.writeBuffer();
-  return new Blob([buf], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-}
-
-async function saveFile(filename, blob){
-  let dl = null;
-  if (window.claude && window.claude.use){ try { dl = await window.claude.use("downloads"); } catch(e){ dl = null; } }
-  if (dl){ await dl.save({filename, data:blob}); return; }
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = filename;
-  document.body.appendChild(a); a.click();
-  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-}
-
-async function exportYear(btn){
-  const msg = document.getElementById("xlsxMsg");
-  btn.disabled = true; msg.textContent = "Préparation du fichier…";
-  try {
-    const blob = await buildWorkbook();
-    await saveFile(`Planning_RCD_2026-2027_${todayIso}.xlsx`, blob);
-    msg.textContent = "Fichier prêt.";
-  } catch(e){
-    msg.textContent = e && e.code==="declined" ? "Téléchargement annulé." :
-      e && e.message==="load" ? "Impossible de charger l'outil Excel : vérifie ta connexion internet." :
-      "Le téléchargement n'a pas abouti. Réessaie dans un instant.";
-  } finally { btn.disabled = false; }
-}
-
-document.getElementById("btnXlsx").onclick = e => exportYear(e.currentTarget);
-
-document.getElementById("icsFile").addEventListener("change", e => { const f = e.target.files && e.target.files[0]; if (f) importIcsFile(f); e.target.value = ""; });
-document.addEventListener("dragover", e => { if (e.dataTransfer && [...e.dataTransfer.items||[]].some(i=>i.kind==="file")) e.preventDefault(); });
-document.addEventListener("drop", e => { const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (f && /\.ics$/i.test(f.name)) { e.preventDefault(); importIcsFile(f); switchTab("offers"); } });
-
-function switchTab(t){
-  const off = t==="offers";
-  document.getElementById("tabOffers").setAttribute("aria-selected", off);
-  document.getElementById("tabMine").setAttribute("aria-selected", !off);
-  document.getElementById("pOffers").hidden = !off;
-  document.getElementById("pMine").hidden = off;
-}
-document.getElementById("tabOffers").onclick = () => switchTab("offers");
-document.getElementById("tabMine").onclick = () => switchTab("mine");
-
-document.addEventListener("click", e => {
-  const b = e.target.closest("[data-act]"); if (!b) return;
-  const a = b.dataset.act;
-  if (a==="note"){
-    const o = offers[+b.dataset.i]; const id = o.date+"_"+o.start.replace("h","");
-    write("rcd", id, {date:o.date, debut:o.start, fin:o.end, classe:o.classe, prof:o.prof, matiere:o.matiere, salle:o.salle, statut:"attente", source:"pronote"});
-  } else if (a==="unnote"){ write("rcd", b.dataset.id, null); }
-  else if (a==="free"){
-    const o = offers[+b.dataset.i]; const si = overlapSlots(o.start,o.end);
-    si.forEach(s => write("dispo", slotKey(o.date,s), {date:o.date, creneau:SLOTS[s][0], etat:"libre", motif:""}));
-  } else if (a==="cell"){
-    const d=b.dataset.date, si=+b.dataset.si;
-    selCell = (selCell && selCell.date===d && selCell.si===si) ? null : {date:d, si}; render();
-    if (selCell) document.getElementById("slotpanel")?.scrollIntoView({behavior:"smooth", block:"nearest"});
-  } else if (a==="setfree" || a==="setbusy"){
-    const d=b.dataset.date, si=+b.dataset.si; const motif = (document.getElementById("motif")?.value||"").trim();
-    write("dispo", slotKey(d,si), {date:d, creneau:SLOTS[si][0], etat: a==="setfree"?"libre":"occupe", motif});
-  } else if (a==="reset"){ write("dispo", b.dataset.k, null); }
-  else if (a==="filter"){ filterSlot = {date:b.dataset.date, si:+b.dataset.si}; render(); document.getElementById("lists").scrollIntoView({behavior:"smooth", block:"start"}); }
-  else if (a==="clearfilter"){ filterSlot = null; render(); }
-  else if (a==="goto"){ const d=b.dataset.date, si=+b.dataset.si; const w=weekOf(d); if (w) weekIdx=w.wi; if (si>=0) selCell={date:d, si}; render(); if (window.innerWidth<1000) document.getElementById("week").scrollIntoView({behavior:"smooth"}); }
-  else if (a==="week"){ weekIdx=+b.dataset.w; selCell=null; render(); }
-  else if (a==="wprev" || a==="wnext"){ weekIdx += a==="wprev" ? -1 : 1; selCell=null; render(); }
-  else if (a==="askdel"){ const id=b.dataset.id; document.querySelector(`[data-del="${CSS.escape(id)}"]`).innerHTML = `<span class="note">Supprimer ?</span> <button class="btn small danger" data-act="del" data-id="${id}">Oui</button> <button class="btn small ghost" data-act="nodel">Non</button>`; }
-  else if (a==="del"){ write("rcd", b.dataset.id, null); }
-  else if (a==="confirm"){ const r = rcd.get(b.dataset.id); if (r) write("rcd", b.dataset.id, {...r, statut:"confirme"}); }
-  else if (a==="export"){ exportTsv(); }
-  else if (a==="cap"){ showCap = !showCap; renderHeader(); }
-  else if (a==="nodel"){ renderMine(); }
-});
-document.addEventListener("change", e => {
-  const s = e.target.closest("[data-act='statut']"); if (!s) return;
-  const r = rcd.get(s.dataset.id); if (!r) return;
-  write("rcd", s.dataset.id, {...r, statut:s.value});
+  else if (a==="askdel"){ confirmDel = b.dataset.id; renderCollection(); }
+  else if (a==="nodel"){ confirmDel = null; renderCollection(); }
+  else if (a==="del"){ items = items.filter(i => i.id!==b.dataset.id); confirmDel = null; if (editingId===b.dataset.id) resetForm(); save(); render(); }
+  else if (a==="closeproj") closeProj();
+  else if (a==="gorestore"){ $("saveCard").scrollIntoView({behavior:"smooth"}); }
 });
 
-/* add form */
-document.getElementById("fSlot").innerHTML = SLOTS.map((s,i)=>`<option value="${i}">${s[0]}</option>`).join("");
-document.getElementById("fDate").value = todayIso;
-document.getElementById("addForm").addEventListener("submit", e => {
-  e.preventDefault();
-  const date = document.getElementById("fDate").value; const si=+document.getElementById("fSlot").value; const len=+document.getElementById("fLen").value;
-  if (!date) return;
-  const last = Math.min(SLOTS.length-1, si+len-1);
-  const [prof, matiere] = document.getElementById("fProf").value.split("·").map(s=>s.trim());
-  const id = date+"_"+SLOTS[si][0].replace("h","");
-  write("rcd", id, {date, debut:SLOTS[si][0], fin:SLOTS[last][1], classe:document.getElementById("fClasse").value.trim().toUpperCase(), prof:prof||"", matiere:matiere||"", salle:"", statut:document.getElementById("fStatut").value, source:"manuel"});
-  document.getElementById("fMsg").textContent = "Ajouté le "+fmtShort(date)+" à "+SLOTS[si][0]+".";
-  document.getElementById("fClasse").value=""; document.getElementById("fProf").value="";
-});
+/* projection plein écran */
+function openProj(it){
+  const p = $("proj");
+  p.innerHTML = `<button class="btn-sec close" data-act="closeproj">✕ Fermer (Échap)</button>${cardHtml(it)}`;
+  p.hidden = false;
+  if (p.requestFullscreen) p.requestFullscreen().catch(()=>{});
+}
+function closeProj(){ $("proj").hidden = true; if (document.fullscreenElement) document.exitFullscreen().catch(()=>{}); }
+document.addEventListener("keydown", e => { if (e.key==="Escape" && !$("proj").hidden) closeProj(); });
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && !$("proj").hidden) $("proj").hidden = true; });
+
+/* impression du casier affiché */
+const LAYOUTS = {1:{cols:1,rows:1,v:true}, 4:{cols:2,rows:2,v:true}, 6:{cols:2,rows:3,v:false}, 10:{cols:2,rows:5,v:false},
+  21:{cols:3,rows:7,lab:{w:63.5,h:38.1,top:15.15,left:7.25,gx:2.5,gy:0}, name:"21 étiquettes 63,5 × 38,1 mm (type Avery L7160)"},
+  24:{cols:3,rows:8,lab:{w:70,h:37,top:0.5,left:0,gx:0,gy:0}, name:"24 étiquettes 70 × 37 mm (type Avery 3474)"}};
+const FORMATS = [1,4,6,10,21,24];
+let printJob = null;  // {items:[...], single:bool}
+let perPage = 10; try { perPage = +localStorage.getItem("qr-zeghoudi-perpage") || 10; } catch(e){}
+function printCard(it){
+  const n = NIV[it.niveau] || NIV["6e"], u = normalizeUrl(it.url);
+  return `<div class="pc" style="--c:${n.hex}"><div class="q">${qrSvg(u.url, n.hex)}</div><div class="t"><span class="prof">${esc(PROF)}</span><span class="badge">${esc(n.k)}</span>${it.theme?`<span class="theme">${esc(it.theme)}</span>`:""}${it.titre?`<span class="titre">${esc(it.titre)}</span>`:""}<span class="scan">Scanne-moi !</span><span class="host">${esc(u.host)}</span></div></div>`;
+}
+function openPrint(list, single){
+  if (!list.length){ $("msg").textContent = "Rien à imprimer dans ce casier."; return; }
+  printJob = {items:list, single};
+  $("printWhat").textContent = single ? `QR code : ${list[0].niveau}${list[0].theme?" · "+list[0].theme:""}${list[0].titre?" · "+list[0].titre:""}` : `${casier==="tous"?"Tous les casiers":"Casier "+casier} : ${list.length} QR code${list.length>1?"s":""}`;
+  $("fillWrap").hidden = !single; $("printFill").checked = single;
+  renderPrintOpts(); $("printModal").hidden = false; $("printGo").focus();
+}
+function renderPrintOpts(){
+  if (!LAYOUTS[perPage]) perPage = 10;
+  $("printOpts").innerHTML = FORMATS.map(k => { const L = LAYOUTS[k];
+    return `<button class="opt" aria-pressed="${perPage===k}" data-per="${k}"><span class="mini-sheet" style="grid-template-columns:repeat(${L.cols},1fr);grid-template-rows:repeat(${L.rows},1fr)">${"<i></i>".repeat(k)}</span>${k}${L.lab?`<small>étiquettes cahier</small>`:`<small>par page</small>`}</button>`; }).join("");
+  const L = LAYOUTS[perPage];
+  $("labNote").hidden = !L.lab;
+  if (L.lab) $("labNote").textContent = `Planche de ${L.name}. Dans la fenêtre d'impression, choisis « Taille réelle » (100 %) et marges « Aucune ». Fais d'abord un essai sur une feuille blanche, posée contre la planche à la lumière.`;
+}
+function buildPrint(){
+  const L = LAYOUTS[perPage];
+  let cards = printJob.items;
+  if (printJob.single && $("printFill").checked) cards = Array(perPage).fill(cards[0]);
+  let h = "";
+  for (let i=0; i<cards.length; i+=perPage){
+    const page = cards.slice(i, i+perPage);
+    if (L.lab){
+      const g = L.lab;
+      h += `<div class="sheet lab l${perPage}">${page.map((c,j)=>{ const col = j % L.cols, row = Math.floor(j / L.cols);
+        return `<div class="lcell" style="left:${g.left + col*(g.w+g.gx)}mm;top:${g.top + row*(g.h+g.gy)}mm;width:${g.w}mm;height:${g.h}mm">${printCard(c)}</div>`; }).join("")}</div>`;
+    } else {
+      h += `<div class="sheet n${perPage}${L.v?" v":""}" style="grid-template-columns:repeat(${L.cols},1fr);grid-template-rows:repeat(${L.rows},1fr)">${page.map(c=>`<div class="cell">${printCard(c)}</div>`).join("")}</div>`;
+    }
+  }
+  $("printArea").innerHTML = h;
+}
+$("btnPrint").onclick = () => {
+  const q = $("search").value.trim().toLowerCase();
+  let list = items.filter(i => casier==="tous" || i.niveau===casier);
+  if (q) list = list.filter(i => [i.theme, i.titre, i.url].some(s => (s||"").toLowerCase().includes(q)));
+  list.sort((a,b) => a.niveau.localeCompare(b.niveau) || (a.theme||"~").localeCompare(b.theme||"~","fr"));
+  openPrint(list, false);
+};
+$("printOpts").addEventListener("click", e => { const b = e.target.closest("[data-per]"); if (!b) return; perPage = +b.dataset.per; try { localStorage.setItem("qr-zeghoudi-perpage", perPage); } catch(err){} renderPrintOpts(); });
+$("printCancel").onclick = () => { $("printModal").hidden = true; };
+const framed = (() => { try { return window.self !== window.top; } catch(e){ return true; } })();
+$("printGo").onclick = () => {
+  buildPrint();
+  if (framed){
+    $("labNote").hidden = false;
+    $("labNote").textContent = "Cette page est affichée dans un aperçu qui bloque l'impression. Ouvre-la dans ton navigateur (https://fatheyze.github.io/qrcodes/, ou le fichier index.html ouvert avec Chrome), puis recommence.";
+  } else { $("printModal").hidden = true; }
+  window.print();   // appelé directement dans le clic : Safari et Chrome ouvrent la fenêtre d'impression
+};
+document.addEventListener("keydown", e => { if (e.key==="Escape" && !$("printModal").hidden) $("printModal").hidden = true; });
+$("btnGoSave").onclick = () => $("saveCard").scrollIntoView({behavior:"smooth"});
+$("btnHelp").onclick = () => { $("help").open = true; $("help").scrollIntoView({behavior:"smooth"}); };
 
 /* ---------- sauvegarde dans un fichier ---------- */
-const LAST_BACKUP = "rcd-pagnol-last-backup";
+const LAST_BACKUP = "qr-zeghoudi-last-backup";
 let fileHandle = null, autoTimer = null, autoOk = false, autoLast = null;
 const hasFS = typeof window.showSaveFilePicker === "function";
-function idb(){ return new Promise((ok, ko) => { const r = indexedDB.open("rcd-pagnol", 1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error); }); }
+function idb(){ return new Promise((ok, ko) => { const r = indexedDB.open("qr-zeghoudi", 1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error); }); }
 async function idbGet(k){ try { const d = await idb(); return await new Promise(ok => { const q = d.transaction("kv").objectStore("kv").get(k); q.onsuccess = () => ok(q.result); q.onerror = () => ok(null); }); } catch(e){ return null; } }
 async function idbSet(k, v){ try { const d = await idb(); await new Promise(ok => { const t = d.transaction("kv","readwrite"); t.objectStore("kv").put(v, k); t.oncomplete = ok; t.onerror = ok; }); } catch(e){} }
 function markBackup(){ try { localStorage.setItem(LAST_BACKUP, new Date().toISOString()); } catch(e){} }
-function scheduleAutoSave(){ if (!fileHandle || !autoOk) return; clearTimeout(autoTimer); autoTimer = setTimeout(writeAuto, 800); }
+function scheduleAutoSave(){ if (typeof Nuage !== "undefined") Nuage.changed(); if (!fileHandle || !autoOk) return; clearTimeout(autoTimer); autoTimer = setTimeout(writeAuto, 800); }
 async function writeAuto(){
   try { const w = await fileHandle.createWritable(); await w.write(snapshot()); await w.close(); autoLast = new Date(); markBackup(); }
   catch(e){ autoOk = false; }
   renderSaveState();
 }
 function renderSaveState(){
-  const st = document.getElementById("autoState"); if (!st) return;
-  const bA = document.getElementById("btnAuto"), bR = document.getElementById("btnAutoResume");
-  bA.hidden = !hasFS || !!fileHandle; bR.hidden = !(fileHandle && !autoOk);
+  $("btnAuto").hidden = !hasFS || !!fileHandle; $("btnAutoResume").hidden = !(fileHandle && !autoOk);
+  const st = $("autoState");
   if (!hasFS) st.textContent = "Sauvegarde automatique non disponible dans ce navigateur (elle marche avec Chrome ou Edge sur ordinateur). Télécharge une sauvegarde de temps en temps.";
   else if (fileHandle && autoOk) st.textContent = `Sauvegarde automatique active : « ${fileHandle.name} »${autoLast ? ` · dernière copie à ${pad(autoLast.getHours())}h${pad(autoLast.getMinutes())}` : ""}.`;
   else if (fileHandle) st.textContent = `Sauvegarde automatique en pause : clique « Reprendre » pour autoriser l'écriture dans « ${fileHandle.name} ».`;
   else st.textContent = "Sauvegarde automatique non activée.";
   let last = null; try { last = localStorage.getItem(LAST_BACKUP); } catch(e){}
   const old = !last || (Date.now() - new Date(last).getTime()) > 14*86400000;
-  if (old && !(fileHandle && autoOk) && rcd.size && document.getElementById("dbBanner").hidden) showBanner(last ? "Ta dernière sauvegarde date de plus de 2 semaines : télécharge-en une dans l'onglet Mes RCD (cadre Sauvegarde)." : "Aucune sauvegarde de tes remplacements pour l'instant : onglet Mes RCD, cadre Sauvegarde.");
+  if (old && !(fileHandle && autoOk) && !Nuage.on() && items.length && $("banner").hidden)
+    showBanner(`${last ? "Ta dernière sauvegarde date de plus de 2 semaines." : "Tes QR codes ne sont pas encore sauvegardés dans un fichier."} <button class="mini" data-act="gorestore">Aller à la sauvegarde</button>`);
 }
-document.getElementById("btnAuto").onclick = async () => {
+$("btnAuto").onclick = async () => {
   try {
-    fileHandle = await window.showSaveFilePicker({suggestedName:"rcd-pagnol-sauvegarde.json", types:[{description:"Sauvegarde RCD", accept:{"application/json":[".json"]}}]});
+    fileHandle = await window.showSaveFilePicker({suggestedName:"qr-codes-zeghoudi-sauvegarde.json", types:[{description:"Sauvegarde QR codes", accept:{"application/json":[".json"]}}]});
     await idbSet("handle", fileHandle); autoOk = true; await writeAuto();
-    document.getElementById("bMsg").textContent = "Chaque modification sera recopiée dans ce fichier. Range-le dans un dossier synchronisé (iCloud Drive, Google Drive, OneDrive) pour en avoir aussi une copie en ligne.";
-    document.getElementById("dbBanner").hidden = true;
-  } catch(e){ /* annulé */ }
+    $("saveMsg").textContent = "Chaque modification sera recopiée dans ce fichier. Range-le dans un dossier synchronisé (iCloud Drive, Google Drive, OneDrive) pour en avoir aussi une copie en ligne.";
+    $("banner").hidden = true;
+  } catch(e){}
 };
-document.getElementById("btnAutoResume").onclick = async () => {
+$("btnAutoResume").onclick = async () => {
   try { autoOk = (await fileHandle.requestPermission({mode:"readwrite"})) === "granted"; if (autoOk) await writeAuto(); } catch(e){ autoOk = false; }
   renderSaveState();
 };
-document.getElementById("btnDlBackup").onclick = () => {
-  const blob = new Blob([snapshot()], {type:"application/json"});
-  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `rcd-pagnol-sauvegarde-${todayIso}.json`;
-  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-  markBackup(); document.getElementById("dbBanner").hidden = true;
-  document.getElementById("bMsg").textContent = "Sauvegarde téléchargée. Garde-la dans un dossier synchronisé ou sur une clé USB.";
+$("btnDl").onclick = () => {
+  downloadBlob(new Blob([snapshot()], {type:"application/json"}), `qr-codes-zeghoudi-${todayIso}.json`);
+  markBackup(); $("banner").hidden = true; $("saveMsg").textContent = "Sauvegarde téléchargée. Garde-la dans un dossier synchronisé ou sur une clé USB.";
 };
-async function restoreFromFile(f){
-  const msg = document.getElementById("bMsg");
+$("fRestore").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
   try {
     const o = JSON.parse(await f.text());
-    if (!o || typeof o.rcd !== "object") throw 0;
-    loadStore(o); if (o.ics) await saveIcs(o.ics); save(); render();
-    msg.textContent = `${rcd.size} remplacement(s) restauré(s)${o.ics ? " avec l'emploi du temps PRONOTE" : ""}.`;
-    document.getElementById("dbBanner").hidden = true;
-  } catch(e){ msg.textContent = "Ce fichier n'est pas une sauvegarde RCD valide."; }
-}
-document.getElementById("restoreFile").addEventListener("change", e => { const f = e.target.files && e.target.files[0]; if (f) restoreFromFile(f); e.target.value = ""; });
-document.addEventListener("click", e => { if (e.target.closest("[data-act='gorestore']")) { switchTab("mine"); document.getElementById("saveCard").scrollIntoView({behavior:"smooth"}); } });
+    if (!o || !Array.isArray(o.items)) throw 0;
+    const known = new Set(items.map(i=>i.id)); let added = 0;
+    for (const it of o.items){ if (it && it.id && it.url && !known.has(it.id)){ items.push(it); added++; } }
+    save(); render(); $("banner").hidden = true;
+    $("saveMsg").textContent = `${added} QR code${added>1?"s":""} récupéré${added>1?"s":""} (ceux déjà présents ne sont pas dupliqués).`;
+  } catch(err){ $("saveMsg").textContent = "Ce fichier n'est pas une sauvegarde de QR codes valide."; }
+});
 
-/* ---------- boot ---------- */
+/* ---------- démarrage ---------- */
 (function boot(){
-  let stored = null;
-  try { const s = localStorage.getItem(STORE); if (s) stored = JSON.parse(s); } catch(e){}
-  if (stored) loadStore(stored);
-  else {
-    loadStore(SEED); save();
-    const bn = document.getElementById("dbBanner");
-    bn.innerHTML = `Première ouverture, ou données du navigateur effacées ? Si tu as une sauvegarde, <button class="btn small" data-act="gorestore">ouvre-la ici</button> pour tout retrouver.`;
-    bn.hidden = false;
+  const had = load();
+  if (!had){
+    try { localStorage.setItem(STORE, snapshot()); } catch(e){}
+    showBanner(`Première ouverture, ou données du navigateur effacées ? Si tu as une sauvegarde, <button class="mini" data-act="gorestore">ouvre-la ici</button> pour retrouver tous tes QR codes.`);
   }
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch(e){}
-  if (hasFS) idbGet("handle").then(async h => {
-    if (h){ fileHandle = h; try { autoOk = (await h.queryPermission({mode:"readwrite"})) === "granted"; } catch(e){ autoOk = false; } }
-    renderSaveState();
-  }); else setTimeout(renderSaveState, 0);
-  rcdLoaded = true;
-  let initial = "";
-  try { initial = localStorage.getItem("rcd-paste") || ""; } catch(e){}
-  loadText(initial, false);
+  render();
+  if (hasFS) idbGet("handle").then(async h => { if (h){ fileHandle = h; try { autoOk = (await h.queryPermission({mode:"readwrite"})) === "granted"; } catch(e){ autoOk = false; } } renderSaveState(); });
+  else renderSaveState();
+  $("fUrl").focus();
+  Nuage.init({
+    file: "qr-codes.json",
+    getText: snapshot,
+    summary: o => { const n = (o.items || []).length; return `${n} QR code${n > 1 ? "s" : ""}`; },
+    apply: o => { items = Array.isArray(o.items) ? o.items : []; try { localStorage.setItem(STORE, snapshot()); } catch(e){} render(); },
+    onSynced: () => { markBackup(); const b = $("banner"); if (/sauvegarde/i.test(b.textContent)) b.hidden = true; },
+    mount: $("saveCard"),
+    pillIn: document.querySelector(".brand > div:last-child")
+  });
 })();
 </script>
 </body>
