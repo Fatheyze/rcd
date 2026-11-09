@@ -269,6 +269,7 @@ details.more>summary{cursor:pointer;font-family:var(--f-display);font-weight:600
         </div>
         <div class="row">
           <button class="btn" id="btnEdit">Coller une nouvelle liste</button>
+          <button class="btn ghost" id="btnClearOffers">Vider la liste</button>
         </div>
       </div>
       <div class="ics-row">
@@ -1098,8 +1099,23 @@ function showToast(msg){
   el.textContent = msg; el.hidden = false;
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 5000);
 }
+const OFFERS_KEY = "rcd-offers";
+function offersToday(){ const n = new Date(); return iso(new Date(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()))); }
+function offerKey(o){ return [o.date, o.start, o.classe, o.matiere].join("|"); }
+function readOffers(){ try { const s = localStorage.getItem(OFFERS_KEY); return s ? JSON.parse(s) : null; } catch(e){ return null; } }
+function writeOffers(list){ try { localStorage.setItem(OFFERS_KEY, JSON.stringify(list)); } catch(e){} }
+function mergeOffers(oldList, fresh){
+  const today = offersToday();
+  const seen = new Set(); const out = [];
+  [...oldList, ...fresh].forEach(o => { if (o.date < today) return; const k = offerKey(o); if (seen.has(k)) return; seen.add(k); out.push(o); });
+  return out.sort((a,b) => (a.date+a.start).localeCompare(b.date+b.start));
+}
 function loadText(t, save){
-  offers = parsePronote(t);
+  const fresh = parsePronote(t);
+  const before = offers.length;
+  if (save) offers = mergeOffers(offers, fresh);
+  else { const saved = readOffers(); offers = saved ? mergeOffers(saved, []) : fresh; }
+  if (save) writeOffers(offers);
   filterSlot = null; selCell = null;
   const info = document.getElementById("pasteInfo");
   if (offers.length){
@@ -1108,7 +1124,8 @@ function loadText(t, save){
     let at = null;
     if (save) { at = new Date(); try { localStorage.setItem("rcd-paste-at", at.toISOString()); } catch(e){} }
     else { try { const s = localStorage.getItem("rcd-paste-at"); if (s) at = new Date(s); } catch(e){} }
-    info.textContent = `${offers.length} cours à pourvoir lus (${dates.length>1?fmtShort(dates[0])+" au "+fmtShort(dates.at(-1)):fmtShort(dates[0])}).` + (bad ? ` Attention : ${bad} cours sans classe reconnue.` : "");
+    const added = save ? offers.length - before : 0;
+    info.textContent = `${offers.length} cours à pourvoir (${dates.length>1?fmtShort(dates[0])+" au "+fmtShort(dates.at(-1)):fmtShort(dates[0])})` + (save ? `, ${added>=0?"+"+added:added} avec ce collage.` : ".") + (bad ? ` Attention : ${bad} cours sans classe reconnue.` : "");
     const pa = document.getElementById("pasteAt");
     if (pa) {
       if (at && !isNaN(at)) {
@@ -1120,9 +1137,8 @@ function loadText(t, save){
     }
     const w = weekOf(offers[0].date); if (w) weekIdx = w.wi;
   } else if (t.trim()) {
-    info.textContent = "Je n'ai reconnu aucun cours dans ce texte. Copie la liste depuis la page « Remplacements à pourvoir » : chaque cours doit contenir une date (08 oct.) et un horaire (08h40 - 09h40).";
+    if (!offers.length) info.textContent = "Je n'ai reconnu aucun cours dans ce texte. Copie la liste depuis la page « Remplacements à pourvoir » : chaque cours doit contenir une date (08 oct.) et un horaire (08h40 - 09h40).";
   }
-  if (save) { try{ localStorage.setItem("rcd-paste", t); }catch(e){} }
   render();
   if (save) {
     const all = offers.map(o => classify(o));
@@ -1138,6 +1154,13 @@ document.addEventListener("paste", e => {
   if (t && /\d{1,2}\s*h\s*\d{2}/i.test(t)) { e.preventDefault(); loadText(t, true); switchTab("offers"); }
 });
 document.getElementById("btnEdit").onclick = () => { const box=document.getElementById("pasteBox"); box.hidden=false; const a=document.getElementById("pasteArea"); a.value=""; a.focus(); };
+document.getElementById("btnClearOffers").onclick = () => {
+  if (!confirm("Vider la liste des cours à pourvoir ? Tes propres remplacements ne sont pas touchés.")) return;
+  offers = []; writeOffers([]); try { localStorage.removeItem("rcd-paste-at"); } catch(e){}
+  const pa = document.getElementById("pasteAt"); if (pa) pa.innerHTML = "";
+  document.getElementById("pasteInfo").textContent = "Liste vidée. Colle une nouvelle liste PRONOTE pour la remplir.";
+  render();
+};
 document.getElementById("btnCancel").onclick = () => { document.getElementById("pasteBox").hidden = true; };
 document.getElementById("btnAnalyse").onclick = () => { const t=document.getElementById("pasteArea").value; if (!t.trim()) return; document.getElementById("pasteBox").hidden = true; loadText(t, true); };
 document.getElementById("pasteArea").addEventListener("paste", () => setTimeout(()=>{ const t=document.getElementById("pasteArea").value; if (/\d{1,2}\s*h\s*\d{2}/i.test(t)){ document.getElementById("pasteBox").hidden = true; loadText(t, true); } }, 0));
