@@ -587,7 +587,55 @@ function monthFrom(word){ const k = word.toLowerCase().replace(/\.$/,""); return
    séparés par des tabulations ou collés sur une même ligne. On découpe en blocs autour de chaque horaire. */
 const MONTH_RX = "(janv|févr|fevr|mars|avr|mai|juin|juil|août|aout|sept|oct|nov|déc|dec)[a-zéû]*\\.?";
 const TIME_RX = /(\d{1,2})\s*h\s*(\d{2})\s*(?:[-–—]|à|a)\s*(\d{1,2})\s*h\s*(\d{2})(?:\s*\(\s*\d+\s*h\s*\d{2}\s*\))?/gi;
+/* Format tableau (copie de la liste PRONOTE « Remplacements » avec colonnes séparées par des tabulations) :
+   "jeudi 19/11"  "11h45 - 12h35"  1h00  5E  salle  matière  professeur  remplaçant  action  information
+   avec deux sections : « Remplacements à pourvoir » (offres) et « Mes remplacements » (RCD qui me sont attribués). */
+const decodeEnt = s => s.replace(/&nbsp;/g," ").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#0?39;|&apos;/g,"'").replace(/&amp;/g,"&");
+const unq = s => decodeEnt(s.trim().replace(/^"(.*)"$/s,"$1").replace(/""/g,'"')).trim();
+const TAB_DATE_RX = /^(?:[a-zéû]+\.?\s+)?(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/i;
+function parsePronoteTable(text){
+  const lines = text.replace(/\r\n?/g,"\n").split("\n");
+  const offers = [], mine = []; let section = "offres", found = false;
+  for (const line of lines){
+    const c = line.split("\t").map(unq);
+    const first = (c[0]||"").toLowerCase();
+    if (c.filter(Boolean).length===1){
+      if (/mes remplacements/.test(first)) section = "mine";
+      else if (/à pourvoir|a pourvoir/.test(first)) section = "offres";
+      continue;
+    }
+    const dm = TAB_DATE_RX.exec(c[0]||""), tm = /(\d{1,2})\s*h\s*(\d{2})\s*[-–—]\s*(\d{1,2})\s*h\s*(\d{2})/i.exec(c[1]||"");
+    if (!dm || !tm) continue;
+    found = true;
+    const mo = +dm[2], y = dm[3] ? (dm[3].length===2 ? 2000 + +dm[3] : +dm[3]) : null;
+    const date = y ? iso(new Date(Date.UTC(y, mo-1, +dm[1]))) : mkDate(+dm[1], mo);
+    const o = {date, start:pad(+tm[1])+"h"+tm[2], end:pad(+tm[3])+"h"+tm[4], classe:(c[3]||"").toUpperCase().replace(/\s+/g,""), salle:c[4]||"", matiere:c[5]||"", prof:c[6]||""};
+    if (section==="mine") mine.push({...o, remplacant:c[7]||""});
+    else {
+      const action = c[8]||"", info = c[9]||"";
+      offers.push({...o, statut:info, deja:/retirer|désister|ne plus être volontaire/i.test(action), commentaire:c[10]||""});
+    }
+  }
+  return found ? {offers, mine} : null;
+}
+/* « Mes remplacements » collés : ajoutés à Mes RCD comme confirmés ; « [Retirer ma demande] » : ajoutés en attente */
+function importFromTable(tab){
+  let added = 0, confirmed = 0, pending = 0;
+  for (const r of tab.mine){
+    const id = r.date+"_"+r.start.replace("h",""), ex = rcd.get(id);
+    const next = {...(ex||{}), date:r.date, debut:r.start, fin:r.end, classe:r.classe, prof:r.prof, matiere:r.matiere, salle:r.salle, statut:"confirme", source:(ex&&ex.source)||"pronote"};
+    if (!ex){ added++; write("rcd", id, next); }
+    else if (ex.statut!=="confirme" || ex.classe!==r.classe || ex.fin!==r.end){ confirmed++; write("rcd", id, next); }
+  }
+  for (const o of tab.offers.filter(o => o.deja)){
+    const id = o.date+"_"+o.start.replace("h",""), ex = rcd.get(id);
+    if (ex) continue;
+    pending++; write("rcd", id, {date:o.date, debut:o.start, fin:o.end, classe:o.classe, prof:o.prof, matiere:o.matiere, salle:o.salle, statut:"attente", source:"pronote"});
+  }
+  return {added, confirmed, pending};
+}
 function parsePronote(text){
+  const tab = parsePronoteTable(text); if (tab) return tab.offers;
   const T = text.replace(/[   ]/g," ").replace(/\r\n?/g,"\n").replace(/\t+/g,"\n");
   const dates = []; const dRx = new RegExp("(?:^|[^\\d/])(\\d{1,2})\\s*(?:er)?\\s*\\n?\\s*" + MONTH_RX + "(?=$|[\\s,;)])", "gim");
   let m; while ((m = dRx.exec(T))) { const mo = monthFrom(m[2]); if (mo) dates.push({i:m.index, date:mkDate(+m[1], mo)}); }
@@ -1157,6 +1205,8 @@ function mergeOffers(oldList, fresh){
 function loadText(t, fromPaste){
   const now = Date.now();
   const fresh = parsePronote(t).map(o => ({...o, at:now}));
+  const tab = fromPaste ? parsePronoteTable(t) : null;
+  const imp = tab ? importFromTable(tab) : null;
   const before = offers.length;
   if (fromPaste) offers = mergeOffers(offers, fresh);
   else { const saved = readOffers(); offers = saved ? mergeOffers(saved, []) : fresh; }
@@ -1188,7 +1238,8 @@ function loadText(t, fromPaste){
   if (fromPaste) {
     const all = offers.map(o => classify(o));
     const libres = all.filter(c => c.free).length, mesLibres = all.filter(c => c.free && isMine(c.classe)).length;
-    showToast(offers.length ? `✓ Nouvelle liste lue : ${offers.length} cours, dont ${libres} sur tes créneaux libres${mesLibres ? ` (${mesLibres} dans tes classes)` : ""}.` : "Aucun cours reconnu dans ce que tu as collé.");
+    const impTxt = imp && (imp.added+imp.confirmed+imp.pending) ? ` Mes RCD : ${[imp.added?`${imp.added} ajouté${imp.added>1?"s":""}`:"", imp.confirmed?`${imp.confirmed} confirmé${imp.confirmed>1?"s":""}`:"", imp.pending?`${imp.pending} demande${imp.pending>1?"s":""} en attente`:""].filter(Boolean).join(", ")}.` : "";
+    showToast((fresh.length ? `✓ Liste lue : ${fresh.length} cours à pourvoir (${offers.length} gardés en tout), dont ${libres} sur tes créneaux libres${mesLibres ? ` (${mesLibres} dans tes classes)` : ""}.` : tab ? "✓ Liste lue." : "Aucun cours reconnu dans ce que tu as collé.") + impTxt);
     const sm = document.getElementById("summary"); sm.classList.remove("flash"); void sm.offsetWidth; sm.classList.add("flash");
   }
 }
