@@ -533,6 +533,8 @@ const Nuage = (function () {
     ready = true;
     if (token()) pull(); else render();
     document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && token() && !isDirty()) pull(); });
+    // un onglet resté ouvert (ordinateur du collège, téléphone) récupère seul les changements faits ailleurs
+    setInterval(() => { if (document.visibilityState === "visible" && token() && !isDirty() && !pushing && state !== "cle") pull(); }, 60000);
     window.addEventListener("online", () => { if (token()) { if (isDirty()) push(); else pull(); } });
     window.addEventListener("pagehide", () => { if (isDirty() && token()) { clearTimeout(timer); push(); } });
   }
