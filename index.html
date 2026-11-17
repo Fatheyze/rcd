@@ -375,7 +375,7 @@ const Nuage = (function () {
     const body = { message: `Mise à jour ${cfg.file} (${new Date().toLocaleString("fr-FR")})`, content: b64enc(text), branch: BRANCH };
     if (sha) body.sha = sha;
     let r = await gh(`/contents/${encodeURIComponent(cfg.file)}`, { method: "PUT", body: JSON.stringify(body) });
-    if (r.status === 409 || r.status === 422) { await getRemote(); if (sha) body.sha = sha; else delete body.sha;
+    if ((r.status === 409 || r.status === 422) && !cfg.merge) { await getRemote(); if (sha) body.sha = sha; else delete body.sha;
       r = await gh(`/contents/${encodeURIComponent(cfg.file)}`, { method: "PUT", body: JSON.stringify(body) }); }
     if (!r.ok) throw r;
     sha = (await r.json()).content.sha;
@@ -396,7 +396,8 @@ const Nuage = (function () {
     state = "sync"; render();
     try {
       const remote = await getRemote();
-      if (remote === null || isDirty()) await push(true);
+      if (remote === null) await push(true);
+      else if (isDirty()) { pushing = false; await push(); }
       else { if (remote !== cfg.getText()) apply(remote); state = "ok"; lastSync = new Date(); if (cfg.onSynced) cfg.onSynced(); render(); }
     } catch (e) { fail(e); }
   }
@@ -405,8 +406,21 @@ const Nuage = (function () {
     if (pushing) { again = true; return; }
     pushing = true; state = "sync"; render();
     try {
-      if (!sha && !force) { try { await getRemote(); } catch (e) {} }
-      await putRemote(cfg.getText());
+      for (let i = 0; ; i++) {
+        let same = false;
+        if (cfg.merge && !force) {
+          // fusion : on récupère la version en ligne et on la combine avec celle d'ici, rien n'est écrasé
+          const remote = await getRemote();
+          if (remote !== null) {
+            let ro = null; try { ro = JSON.parse(remote); } catch (e) {}
+            if (ro) { const merged = JSON.stringify(cfg.merge(JSON.parse(cfg.getText()), ro)); if (merged !== cfg.getText()) apply(merged); }
+            same = remote === cfg.getText();
+          }
+        } else if (!sha || i > 0) { try { await getRemote(); } catch (e) {} }
+        if (same) break;
+        try { await putRemote(cfg.getText()); break; }
+        catch (e) { if ((e.status === 409 || e.status === 422) && i < 3) continue; throw e; }
+      }
       setDirty(false); state = "ok"; lastSync = new Date(); if (cfg.onSynced) cfg.onSynced();
     } catch (e) { pushing = false; fail(e); return; }
     pushing = false; render();
@@ -439,6 +453,7 @@ const Nuage = (function () {
   }
   function choose(which) {
     const c = choice; choice = null;
+    if (which === "fusion") { pushing = false; push(); return; }
     if (which === "enligne") { apply(c.remote); setDirty(false); state = "ok"; lastSync = new Date(); if (cfg.onSynced) cfg.onSynced(); render(); }
     else push(true);
   }
@@ -480,9 +495,9 @@ const Nuage = (function () {
     if (!box) return;
     let h = `<h3>Synchronisation entre navigateurs</h3>`;
     if (state === "choix") {
-      h += `<p class="n-st">Les données en ligne et celles de ce navigateur sont différentes. Lesquelles garder ?</p>
-        <div class="n-row"><button class="n-main" data-n="enligne">Garder celles en ligne (${choice.there})</button><button data-n="ici">Garder celles de ce navigateur (${choice.here})</button></div>
-        <p>Les autres seront remplacées. Dans le doute, garde celles en ligne.</p>`;
+      h += `<p class="n-st">Les données en ligne et celles de ce navigateur sont différentes. Que faire ?</p>
+        <div class="n-row">${cfg.merge ? `<button class="n-main" data-n="fusion">Tout garder (fusionner les deux)</button>` : ""}<button${cfg.merge ? "" : ` class="n-main"`} data-n="enligne">Garder seulement celles en ligne (${choice.there})</button><button data-n="ici">Garder seulement celles de ce navigateur (${choice.here})</button></div>
+        <p>${cfg.merge ? "« Tout garder » n'efface rien : c'est le choix conseillé." : "Les autres seront remplacées. Dans le doute, garde celles en ligne."}</p>`;
     } else if (!token()) {
       h += `<p>Pour retrouver tes données sur <b>tous tes navigateurs</b> (maison, collège, téléphone) sans sauvegarde à faire, colle ta clé GitHub. Une seule fois par navigateur : elle sert à tous tes outils.</p>
         <div class="n-row"><input type="password" id="nuageCle" placeholder="github_pat_…" autocomplete="off" spellcheck="false" aria-label="Clé GitHub"><button class="n-main" data-n="connect">Connecter</button></div>
@@ -504,7 +519,7 @@ const Nuage = (function () {
     if (a === "connect") connect((box.querySelector("#nuageCle") || {}).value || "");
     else if (a === "now") { if (isDirty()) push(); else pull(); }
     else if (a === "off") disconnect();
-    else if (a === "enligne" || a === "ici") choose(a);
+    else if (a === "enligne" || a === "ici" || a === "fusion") choose(a);
   }
 
   function init(c) {
@@ -546,7 +561,8 @@ const parseIso = s => { const [y,m,d] = s.split("-").map(Number); return new Dat
 const dow = s => (parseIso(s).getUTCDay()+6)%7; // 0 = lundi
 const fmtShort = s => { const d = parseIso(s); return JOURS[dow(s)]+" "+d.getUTCDate()+" "+MOIS[d.getUTCMonth()]; };
 const fmtLong = s => { const d = parseIso(s); return JOURS_L[dow(s)]+" "+d.getUTCDate()+" "+MOIS_L[d.getUTCMonth()]; };
-const todayIso = (() => { const n = new Date(); return n.getFullYear()+"-"+pad(n.getMonth()+1)+"-"+pad(n.getDate()); })();
+const localToday = () => { const n = new Date(); return n.getFullYear()+"-"+pad(n.getMonth()+1)+"-"+pad(n.getDate()); };
+let todayIso = localToday();
 function weekOf(dateIso){
   const t = parseIso(dateIso).getTime();
   for (let i=0;i<WEEKS.length;i++){
@@ -571,7 +587,55 @@ function monthFrom(word){ const k = word.toLowerCase().replace(/\.$/,""); return
    séparés par des tabulations ou collés sur une même ligne. On découpe en blocs autour de chaque horaire. */
 const MONTH_RX = "(janv|févr|fevr|mars|avr|mai|juin|juil|août|aout|sept|oct|nov|déc|dec)[a-zéû]*\\.?";
 const TIME_RX = /(\d{1,2})\s*h\s*(\d{2})\s*(?:[-–—]|à|a)\s*(\d{1,2})\s*h\s*(\d{2})(?:\s*\(\s*\d+\s*h\s*\d{2}\s*\))?/gi;
+/* Format tableau (copie de la liste PRONOTE « Remplacements » avec colonnes séparées par des tabulations) :
+   "jeudi 19/11"  "11h45 - 12h35"  1h00  5E  salle  matière  professeur  remplaçant  action  information
+   avec deux sections : « Remplacements à pourvoir » (offres) et « Mes remplacements » (RCD qui me sont attribués). */
+const decodeEnt = s => s.replace(/&nbsp;/g," ").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#0?39;|&apos;/g,"'").replace(/&amp;/g,"&");
+const unq = s => decodeEnt(s.trim().replace(/^"(.*)"$/s,"$1").replace(/""/g,'"')).trim();
+const TAB_DATE_RX = /^(?:[a-zéû]+\.?\s+)?(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/i;
+function parsePronoteTable(text){
+  const lines = text.replace(/\r\n?/g,"\n").split("\n");
+  const offers = [], mine = []; let section = "offres", found = false;
+  for (const line of lines){
+    const c = line.split("\t").map(unq);
+    const first = (c[0]||"").toLowerCase();
+    if (c.filter(Boolean).length===1){
+      if (/mes remplacements/.test(first)) section = "mine";
+      else if (/à pourvoir|a pourvoir/.test(first)) section = "offres";
+      continue;
+    }
+    const dm = TAB_DATE_RX.exec(c[0]||""), tm = /(\d{1,2})\s*h\s*(\d{2})\s*[-–—]\s*(\d{1,2})\s*h\s*(\d{2})/i.exec(c[1]||"");
+    if (!dm || !tm) continue;
+    found = true;
+    const mo = +dm[2], y = dm[3] ? (dm[3].length===2 ? 2000 + +dm[3] : +dm[3]) : null;
+    const date = y ? iso(new Date(Date.UTC(y, mo-1, +dm[1]))) : mkDate(+dm[1], mo);
+    const o = {date, start:pad(+tm[1])+"h"+tm[2], end:pad(+tm[3])+"h"+tm[4], classe:(c[3]||"").toUpperCase().replace(/\s+/g,""), salle:c[4]||"", matiere:c[5]||"", prof:c[6]||""};
+    if (section==="mine") mine.push({...o, remplacant:c[7]||""});
+    else {
+      const action = c[8]||"", info = c[9]||"";
+      offers.push({...o, statut:info, deja:/retirer|désister|ne plus être volontaire/i.test(action), commentaire:c[10]||""});
+    }
+  }
+  return found ? {offers, mine} : null;
+}
+/* « Mes remplacements » collés : ajoutés à Mes RCD comme confirmés ; « [Retirer ma demande] » : ajoutés en attente */
+function importFromTable(tab){
+  let added = 0, confirmed = 0, pending = 0;
+  for (const r of tab.mine){
+    const id = r.date+"_"+r.start.replace("h",""), ex = rcd.get(id);
+    const next = {...(ex||{}), date:r.date, debut:r.start, fin:r.end, classe:r.classe, prof:r.prof, matiere:r.matiere, salle:r.salle, statut:"confirme", source:(ex&&ex.source)||"pronote"};
+    if (!ex){ added++; write("rcd", id, next); }
+    else if (ex.statut!=="confirme" || ex.classe!==r.classe || ex.fin!==r.end){ confirmed++; write("rcd", id, next); }
+  }
+  for (const o of tab.offers.filter(o => o.deja)){
+    const id = o.date+"_"+o.start.replace("h",""), ex = rcd.get(id);
+    if (ex) continue;
+    pending++; write("rcd", id, {date:o.date, debut:o.start, fin:o.end, classe:o.classe, prof:o.prof, matiere:o.matiere, salle:o.salle, statut:"attente", source:"pronote"});
+  }
+  return {added, confirmed, pending};
+}
 function parsePronote(text){
+  const tab = parsePronoteTable(text); if (tab) return tab.offers;
   const T = text.replace(/[   ]/g," ").replace(/\r\n?/g,"\n").replace(/\t+/g,"\n");
   const dates = []; const dRx = new RegExp("(?:^|[^\\d/])(\\d{1,2})\\s*(?:er)?\\s*\\n?\\s*" + MONTH_RX + "(?=$|[\\s,;)])", "gim");
   let m; while ((m = dRx.exec(T))) { const mo = monthFrom(m[2]); if (mo) dates.push({i:m.index, date:mkDate(+m[1], mo)}); }
@@ -759,6 +823,8 @@ let offers = [];
 let rcd = new Map();      // id -> {date, debut, fin, classe, prof, matiere, salle, statut, source}
 let dispo = new Map();    // id -> {date, creneau, etat:'libre'|'occupe', motif}
 let rcdLoaded = false;
+let del = {rcd:{}, dispo:{}};   // suppressions datées, pour que la synchro ne fasse pas réapparaître un élément supprimé
+let offersClr = 0;        // date du dernier « Vider la liste »
 const STORE = "rcd-pagnol-v1";
 let filterSlot = null;    // {date, si}
 let selCell = null;       // {date, si}
@@ -1074,7 +1140,7 @@ function render(){
 
 /* ---------- persistence (navigateur) ---------- */
 const SEED = {"rcd": {"2026-09-21_1145": {"date": "2026-09-21", "debut": "11h45", "fin": "12h35", "classe": "6E", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-01_0940": {"date": "2026-10-01", "debut": "09h40", "fin": "10h45", "classe": "", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-01_1145": {"date": "2026-10-01", "debut": "11h45", "fin": "12h35", "classe": "", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-06_1305": {"date": "2026-10-06", "debut": "13h05", "fin": "14h00", "classe": "5E", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-09_0940": {"date": "2026-10-09", "debut": "09h40", "fin": "10h45", "classe": "5D", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-09_1045": {"date": "2026-10-09", "debut": "10h45", "fin": "12h35", "classe": "6B", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-12_1145": {"date": "2026-10-12", "debut": "11h45", "fin": "12h35", "classe": "5A", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-13_1305": {"date": "2026-10-13", "debut": "13h05", "fin": "15h10", "classe": "5E", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-15_0940": {"date": "2026-10-15", "debut": "09h40", "fin": "10h45", "classe": "4A", "prof": "", "matiere": "", "salle": "", "statut": "confirme", "source": "excel"}, "2026-10-15_1145": {"date": "2026-10-15", "debut": "11h45", "fin": "12h35", "classe": "4D", "prof": "", "matiere": "", "salle": "", "statut": "attente", "source": "excel", "note": "pas encore visible dans l'EDT PRONOTE"}}, "dispo": {"2026-10-08_0840": {"date": "2026-10-08", "creneau": "08h40", "etat": "occupe", "motif": "Abs administrative (réunion)"}}};
-const snapshot = () => JSON.stringify({rcd:Object.fromEntries(rcd), dispo:Object.fromEntries(dispo), ics: icsData || null});
+const snapshot = () => JSON.stringify({rcd:Object.fromEntries(rcd), dispo:Object.fromEntries(dispo), del, ics: icsData || null, offers, offersClr});
 function save(){
   scheduleAutoSave();
   try { localStorage.setItem(STORE, snapshot()); }
@@ -1083,11 +1149,37 @@ function save(){
 function loadStore(obj){
   rcd = new Map(Object.entries(obj.rcd || {}));
   dispo = new Map(Object.entries(obj.dispo || {}));
+  del = {rcd:{...((obj.del||{}).rcd||{})}, dispo:{...((obj.del||{}).dispo||{})}};
+  if (Array.isArray(obj.offers)){ offers = obj.offers; writeOffers(offers); }
+  if (obj.offersClr){ offersClr = obj.offersClr; try { localStorage.setItem(OFFERS_CLR_KEY, String(offersClr)); } catch(e){} }
 }
 function write(coll, id, data){
   const map = coll==="rcd" ? rcd : dispo;
-  data ? map.set(id, data) : map.delete(id);
+  const t = Date.now();
+  if (data){ map.set(id, {...data, upd:t}); delete del[coll][id]; }
+  else { map.delete(id); del[coll][id] = t; }
   save(); render();
+}
+/* Fusion de deux sauvegardes (ici / en ligne) : on garde tout, et pour un même élément la version la plus récente.
+   Une suppression ne gagne que si elle est plus récente que la dernière modification de l'élément. */
+function mergeSnap(a, b){
+  const out = {rcd:{}, dispo:{}, del:{rcd:{}, dispo:{}}};
+  for (const coll of ["rcd","dispo"]){
+    const A = a[coll]||{}, B = b[coll]||{}, dA = (a.del||{})[coll]||{}, dB = (b.del||{})[coll]||{};
+    for (const id of new Set([...Object.keys(A), ...Object.keys(B), ...Object.keys(dA), ...Object.keys(dB)])){
+      const ea = A[id], eb = B[id], tDel = Math.max(dA[id]||0, dB[id]||0);
+      const e = !ea ? eb : !eb ? ea : ((ea.upd||0) > (eb.upd||0) ? ea : eb);
+      if (e && (!tDel || (e.upd||0) > tDel)) out[coll][id] = e;
+      else if (tDel) out.del[coll][id] = tDel;
+    }
+  }
+  const ia = a.ics, ib = b.ics;
+  out.ics = !ia ? (ib||null) : !ib ? ia : (ia.generated > ib.generated ? ia : ib);
+  out.offersClr = Math.max(a.offersClr||0, b.offersClr||0);
+  const fresh = [...(a.offers||[]), ...(b.offers||[])].filter(o => !out.offersClr || (o.at||0) > out.offersClr)
+    .sort((x,y) => (y.at||0) - (x.at||0));   // la lecture la plus récente d'un même cours l'emporte
+  out.offers = mergeOffers([], fresh);
+  return out;
 }
 function showBanner(t){ const b=document.getElementById("dbBanner"); b.textContent=t; b.hidden=false; }
 
@@ -1099,7 +1191,7 @@ function showToast(msg){
   el.textContent = msg; el.hidden = false;
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 5000);
 }
-const OFFERS_KEY = "rcd-offers";
+const OFFERS_KEY = "rcd-offers", OFFERS_CLR_KEY = "rcd-offers-clr";
 function offersToday(){ const n = new Date(); return iso(new Date(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()))); }
 function offerKey(o){ return [o.date, o.start, o.classe, o.matiere].join("|"); }
 function readOffers(){ try { const s = localStorage.getItem(OFFERS_KEY); return s ? JSON.parse(s) : null; } catch(e){ return null; } }
@@ -1107,25 +1199,28 @@ function writeOffers(list){ try { localStorage.setItem(OFFERS_KEY, JSON.stringif
 function mergeOffers(oldList, fresh){
   const today = offersToday();
   const seen = new Set(); const out = [];
-  [...oldList, ...fresh].forEach(o => { if (o.date < today) return; const k = offerKey(o); if (seen.has(k)) return; seen.add(k); out.push(o); });
+  [...fresh, ...oldList].forEach(o => { if (o.date < today) return; const k = offerKey(o); if (seen.has(k)) return; seen.add(k); out.push(o); });
   return out.sort((a,b) => (a.date+a.start).localeCompare(b.date+b.start));
 }
-function loadText(t, save){
-  const fresh = parsePronote(t);
+function loadText(t, fromPaste){
+  const now = Date.now();
+  const fresh = parsePronote(t).map(o => ({...o, at:now}));
+  const tab = fromPaste ? parsePronoteTable(t) : null;
+  const imp = tab ? importFromTable(tab) : null;
   const before = offers.length;
-  if (save) offers = mergeOffers(offers, fresh);
+  if (fromPaste) offers = mergeOffers(offers, fresh);
   else { const saved = readOffers(); offers = saved ? mergeOffers(saved, []) : fresh; }
-  if (save) writeOffers(offers);
+  if (fromPaste){ writeOffers(offers); if (fresh.length) save(); }
   filterSlot = null; selCell = null;
   const info = document.getElementById("pasteInfo");
   if (offers.length){
     const dates = [...new Set(offers.map(o=>o.date))].sort();
     const bad = offers.filter(o => !o.classe).length;
     let at = null;
-    if (save) { at = new Date(); try { localStorage.setItem("rcd-paste-at", at.toISOString()); } catch(e){} }
+    if (fromPaste) { at = new Date(); try { localStorage.setItem("rcd-paste-at", at.toISOString()); } catch(e){} }
     else { try { const s = localStorage.getItem("rcd-paste-at"); if (s) at = new Date(s); } catch(e){} }
-    const added = save ? offers.length - before : 0;
-    info.textContent = `${offers.length} cours à pourvoir (${dates.length>1?fmtShort(dates[0])+" au "+fmtShort(dates.at(-1)):fmtShort(dates[0])})` + (save ? `, ${added>=0?"+"+added:added} avec ce collage.` : ".") + (bad ? ` Attention : ${bad} cours sans classe reconnue.` : "");
+    const added = fromPaste ? offers.length - before : 0;
+    info.textContent = `${offers.length} cours à pourvoir (${dates.length>1?fmtShort(dates[0])+" au "+fmtShort(dates.at(-1)):fmtShort(dates[0])})` + (fromPaste ? `, ${added>=0?"+"+added:added} avec ce collage.` : ".") + (bad ? ` Attention : ${bad} cours sans classe reconnue.` : "");
     const pa = document.getElementById("pasteAt");
     if (pa) {
       if (at && !isNaN(at)) {
@@ -1140,10 +1235,11 @@ function loadText(t, save){
     if (!offers.length) info.textContent = "Je n'ai reconnu aucun cours dans ce texte. Copie la liste depuis la page « Remplacements à pourvoir » : chaque cours doit contenir une date (08 oct.) et un horaire (08h40 - 09h40).";
   }
   render();
-  if (save) {
+  if (fromPaste) {
     const all = offers.map(o => classify(o));
     const libres = all.filter(c => c.free).length, mesLibres = all.filter(c => c.free && isMine(c.classe)).length;
-    showToast(offers.length ? `✓ Nouvelle liste lue : ${offers.length} cours, dont ${libres} sur tes créneaux libres${mesLibres ? ` (${mesLibres} dans tes classes)` : ""}.` : "Aucun cours reconnu dans ce que tu as collé.");
+    const impTxt = imp && (imp.added+imp.confirmed+imp.pending) ? ` Mes RCD : ${[imp.added?`${imp.added} ajouté${imp.added>1?"s":""}`:"", imp.confirmed?`${imp.confirmed} confirmé${imp.confirmed>1?"s":""}`:"", imp.pending?`${imp.pending} demande${imp.pending>1?"s":""} en attente`:""].filter(Boolean).join(", ")}.` : "";
+    showToast((fresh.length ? `✓ Liste lue : ${fresh.length} cours à pourvoir (${offers.length} gardés en tout), dont ${libres} sur tes créneaux libres${mesLibres ? ` (${mesLibres} dans tes classes)` : ""}.` : tab ? "✓ Liste lue." : "Aucun cours reconnu dans ce que tu as collé.") + impTxt);
     const sm = document.getElementById("summary"); sm.classList.remove("flash"); void sm.offsetWidth; sm.classList.add("flash");
   }
 }
@@ -1156,7 +1252,8 @@ document.addEventListener("paste", e => {
 document.getElementById("btnEdit").onclick = () => { const box=document.getElementById("pasteBox"); box.hidden=false; const a=document.getElementById("pasteArea"); a.value=""; a.focus(); };
 document.getElementById("btnClearOffers").onclick = () => {
   if (!confirm("Vider la liste des cours à pourvoir ? Tes propres remplacements ne sont pas touchés.")) return;
-  offers = []; writeOffers([]); try { localStorage.removeItem("rcd-paste-at"); } catch(e){}
+  offers = []; writeOffers([]); offersClr = Date.now(); try { localStorage.removeItem("rcd-paste-at"); localStorage.setItem(OFFERS_CLR_KEY, String(offersClr)); } catch(e){}
+  save();
   const pa = document.getElementById("pasteAt"); if (pa) pa.innerHTML = "";
   document.getElementById("pasteInfo").textContent = "Liste vidée. Colle une nouvelle liste PRONOTE pour la remplir.";
   render();
@@ -1182,7 +1279,8 @@ async function exportTsv(){
   try { await navigator.clipboard.writeText(tsv); msg.textContent = "Copié : colle-le dans Excel (Ctrl+V)."; }
   catch(e){ area.hidden=false; area.value=tsv; area.select(); msg.textContent = "Tableau sélectionné ci-dessous : fais Ctrl+C."; }
 }
-setInterval(() => { renderHeader(); if (!document.getElementById("pMine").hidden && !document.activeElement?.closest?.("#mineList")) renderMine(); }, 60000);
+setInterval(() => { if (localToday() !== todayIso){ todayIso = localToday(); document.getElementById("fDate").value = todayIso; render(); }
+  renderHeader(); if (!document.getElementById("pMine").hidden && !document.activeElement?.closest?.("#mineList")) renderMine(); }, 60000);
 
 /* ---------- export Excel du planning annuel ---------- */
 const EXCELJS_URL = "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js";
@@ -1426,6 +1524,8 @@ document.getElementById("addForm").addEventListener("submit", e => {
   const last = Math.min(SLOTS.length-1, si+len-1);
   const [prof, matiere] = document.getElementById("fProf").value.split("·").map(s=>s.trim());
   const id = date+"_"+SLOTS[si][0].replace("h","");
+  const ex = rcd.get(id);
+  if (ex && statutOf(ex)!=="annule" && !confirm(`Un remplacement est déjà noté le ${fmtShort(date)} à ${SLOTS[si][0]} (${ex.classe||"classe ?"}). Le remplacer ?`)) return;
   write("rcd", id, {date, debut:SLOTS[si][0], fin:SLOTS[last][1], classe:document.getElementById("fClasse").value.trim().toUpperCase(), prof:prof||"", matiere:matiere||"", salle:"", statut:document.getElementById("fStatut").value, source:"manuel"});
   document.getElementById("fMsg").textContent = "Ajouté le "+fmtShort(date)+" à "+SLOTS[si][0]+".";
   document.getElementById("fClasse").value=""; document.getElementById("fProf").value="";
@@ -1493,6 +1593,8 @@ document.addEventListener("click", e => { if (e.target.closest("[data-act='gores
 (function boot(){
   let stored = null;
   try { const s = localStorage.getItem(STORE); if (s) stored = JSON.parse(s); } catch(e){}
+  try { offersClr = +localStorage.getItem(OFFERS_CLR_KEY) || 0; } catch(e){}
+  offers = readOffers() || [];
   if (stored) loadStore(stored);
   else {
     loadStore(SEED); save();
@@ -1512,9 +1614,12 @@ document.addEventListener("click", e => { if (e.target.closest("[data-act='gores
   Nuage.init({
     file: "rcd.json",
     getText: snapshot,
+    merge: mergeSnap,
     summary: o => { const n = Object.keys(o.rcd || {}).length; return `${n} remplacement${n > 1 ? "s" : ""}`; },
     apply: o => {
+      const before = JSON.stringify(offers);
       loadStore(o); icsData = o.ics || null;
+      if (JSON.stringify(offers) !== before){ const f = filterSlot, c = selCell, w = weekIdx; loadText("", false); filterSlot = f; selCell = c; weekIdx = w; }
       try { if (icsData) localStorage.setItem(ICS_KEY, JSON.stringify(icsData)); else localStorage.removeItem(ICS_KEY); localStorage.setItem(STORE, snapshot()); } catch(e){}
       render();
     },
