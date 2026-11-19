@@ -333,7 +333,7 @@ const Nuage = (function () {
   const OWNER = "fatheyze", REPO = "donnees-outils", BRANCH = "main";
   const KEY = "nuage-github-cle";
   const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
-  let cfg = null, ready = false, applying = false, sha = null, timer = null, pushing = false, again = false;
+  let cfg = null, ready = false, applying = false, sha = null, timer = null, retryT = null, pushing = false, again = false;
   let state = "off", lastSync = null, errMsg = "", choice = null;
 
   const ls = {
@@ -358,8 +358,13 @@ const Nuage = (function () {
     return new TextDecoder().decode(bytes);
   }
   async function gh(path, opts = {}, tok = token()) {
-    return fetch(API + path, { cache: "no-store", ...opts,
-      headers: { "Authorization": "Bearer " + tok, "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", ...(opts.headers || {}) } });
+    // délai maximum : sur un Wi-Fi qui décroche, une requête bloquée ne doit pas figer la synchro
+    const ctl = typeof AbortController === "function" ? new AbortController() : null;
+    const to = ctl ? setTimeout(() => ctl.abort(), 20000) : null;
+    try {
+      return await fetch(API + path, { cache: "no-store", ...opts, ...(ctl ? { signal: ctl.signal } : {}),
+        headers: { "Authorization": "Bearer " + tok, "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", ...(opts.headers || {}) } });
+    } finally { clearTimeout(to); }
   }
   async function getRemote() {
     const r = await gh(`/contents/${encodeURIComponent(cfg.file)}?ref=${BRANCH}`);
@@ -384,12 +389,15 @@ const Nuage = (function () {
     applying = true;
     try { cfg.apply(JSON.parse(text)); } finally { applying = false; }
   }
+  const limited = e => e && (e.status === 429 || (e.status === 403 && e.headers && e.headers.get("x-ratelimit-remaining") === "0"));
   function fail(e) {
     if (e && e.status === 401) { state = "cle"; errMsg = "La clé n'est plus valable (expirée ou supprimée). Colle une nouvelle clé."; }
-    else if (e && (e.status === 403 || e.status === 404)) { state = "cle"; errMsg = `Cette clé n'a pas accès au dépôt « ${REPO} ».`; }
-    else { state = "horsligne"; errMsg = ""; }
+    else if (e && (e.status === 403 || e.status === 404) && !limited(e)) { state = "cle"; errMsg = `Cette clé n'a pas accès au dépôt « ${REPO} ».`; }
+    else { state = "horsligne"; errMsg = ""; clearTimeout(retryT); retryT = setTimeout(() => { if (document.visibilityState === "visible") sync(); }, 15000); }   // coupure passagère : on réessaie tout seul
     render();
   }
+  // envoie ce qui attend ici, sinon récupère ce qui a changé ailleurs
+  function sync() { if (!token() || state === "cle" || state === "choix") return; if (isDirty()) push(); else pull(); }
 
   async function pull() {
     if (!token() || pushing) return;
@@ -532,10 +540,11 @@ const Nuage = (function () {
       pill.addEventListener("click", () => { if (cfg.reveal) cfg.reveal(); setTimeout(() => box.scrollIntoView({ behavior: "smooth", block: "center" }), 50); }); c.pillIn.appendChild(pill); }
     ready = true;
     if (token()) pull(); else render();
-    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && token() && !isDirty()) pull(); });
-    // un onglet resté ouvert (ordinateur du collège, téléphone) récupère seul les changements faits ailleurs
-    setInterval(() => { if (document.visibilityState === "visible" && token() && !isDirty() && !pushing && state !== "cle") pull(); }, 60000);
-    window.addEventListener("online", () => { if (token()) { if (isDirty()) push(); else pull(); } });
+    // au retour sur l'onglet, puis toutes les minutes : on envoie ce qui n'est pas encore parti (coupure réseau)
+    // et on récupère les changements faits ailleurs. Avant, un envoi raté bloquait la synchro jusqu'au rechargement.
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !pushing) sync(); });
+    setInterval(() => { if (document.visibilityState === "visible" && !pushing) sync(); }, 60000);
+    window.addEventListener("online", sync);
     window.addEventListener("pagehide", () => { if (isDirty() && token()) { clearTimeout(timer); push(); } });
   }
   return { init, changed, on: () => !!token() && state !== "cle" };
