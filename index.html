@@ -606,6 +606,14 @@ const TIME_RX = /(\d{1,2})\s*h\s*(\d{2})\s*(?:[-–—]|à|a)\s*(\d{1,2})\s*h\s*
 const decodeEnt = s => s.replace(/&nbsp;/g," ").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#0?39;|&apos;/g,"'").replace(/&amp;/g,"&");
 const unq = s => decodeEnt(s.trim().replace(/^"(.*)"$/s,"$1").replace(/""/g,'"')).trim();
 const TAB_DATE_RX = /^(?:[a-zéû]+\.?\s+)?(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/i;
+/* Cellule « classe » : une classe (« 6E ») ou plusieurs classes regroupées
+   (« <6A> NOM, <6B> NOM… » quand quelques élèves de chaque classe sont concernés) → « 6A, 6B ». */
+function classesOf(cell){
+  const raw = cell || "";
+  const found = [...raw.matchAll(/<\s*([0-9][0-9A-Za-z]*)\s*>/g)].map(m => m[1].toUpperCase());
+  if (found.length) return [...new Set(found)].join(", ");
+  return raw.toUpperCase().replace(/\s+/g,"");
+}
 function parsePronoteTable(text){
   const lines = text.replace(/\r\n?/g,"\n").split("\n");
   const offers = [], mine = []; let section = "offres", found = false;
@@ -622,7 +630,7 @@ function parsePronoteTable(text){
     found = true;
     const mo = +dm[2], y = dm[3] ? (dm[3].length===2 ? 2000 + +dm[3] : +dm[3]) : null;
     const date = y ? iso(new Date(Date.UTC(y, mo-1, +dm[1]))) : mkDate(+dm[1], mo);
-    const o = {date, start:pad(+tm[1])+"h"+tm[2], end:pad(+tm[3])+"h"+tm[4], classe:(c[3]||"").toUpperCase().replace(/\s+/g,""), salle:c[4]||"", matiere:c[5]||"", prof:c[6]||""};
+    const o = {date, start:pad(+tm[1])+"h"+tm[2], end:pad(+tm[3])+"h"+tm[4], classe:classesOf(c[3]), salle:c[4]||"", matiere:c[5]||"", prof:c[6]||""};
     if (section==="mine") mine.push({...o, remplacant:c[7]||""});
     else {
       const action = c[8]||"", info = c[9]||"";
@@ -862,9 +870,9 @@ let selCell = null;       // {date, si}
 let weekIdx = currentWeekIdx();
 let pending = new Set();
 let showCap = false;
-const isMine = c => { const k = (c||"").toUpperCase().replace(/\s+/g,""); return MES_CLASSES.some(m => k.startsWith(m)); };
+const isMine = c => (c||"").toUpperCase().split(",").some(x => { const k = x.replace(/\s+/g,""); return MES_CLASSES.some(m => k.startsWith(m)); });
 const MES_NIVEAUX = new Set(MES_CLASSES.map(c => c[0]));
-const isMyLevel = c => !isMine(c) && MES_NIVEAUX.has((c||"").trim()[0]);
+const isMyLevel = c => !isMine(c) && (c||"").split(",").some(x => MES_NIVEAUX.has(x.trim()[0]));
 const niveauTxt = c => ({"6":"6e","5":"5e","4":"4e","3":"3e"})[(c||"").trim()[0]] || "";
 const rcdSlots = r => overlapSlots(r.debut, r.fin).length || 1;
 const statutOf = r => r.statut==="attente" || r.statut==="annule" ? r.statut : "confirme";
