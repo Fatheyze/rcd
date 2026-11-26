@@ -245,7 +245,7 @@ details.more>summary{cursor:pointer;font-family:var(--f-display);font-weight:600
   <details class="help" id="help">
     <summary>Mode d'emploi</summary>
     <ol>
-      <li><b>Emploi du temps à jour :</b> dans PRONOTE, Mes données › Export au format ICal › Exporter, puis « Importer mon emploi du temps PRONOTE » ici (ou glisse le fichier sur la page). La page y lit tes cours, les cours annulés, les sorties, tes absences, les vacances, le stage des 3e et ton agenda. À refaire quand ton emploi du temps change.</li>
+      <li><b>Emploi du temps à jour :</b> dans PRONOTE, Mes données › Export au format ICal › Exporter, puis « Importer mon emploi du temps PRONOTE » ici (ou glisse le fichier sur la page). La page y lit tes cours, les cours annulés, les sorties, tes absences, les vacances, le stage des 3e et ton agenda. À refaire quand ton emploi du temps change, sauf si la synchronisation est active : l'emploi du temps est alors récupéré tout seul depuis PRONOTE toutes les 2 heures.</li>
       <li><b>Cours à pourvoir :</b> Emploi du temps › Remplacements › Remplacements à pourvoir, décoche « Uniquement les cours qui me concernent », copie la liste et fais Ctrl+V sur cette page.</li>
       <li><b>Se positionner :</b> clique une case verte de la grille, ou un horaire du bandeau « Aujourd'hui / Demain ». Les cours dispos s'affichent (tes classes d'abord, puis les 6e et 3e). Porte-toi volontaire <b>dans PRONOTE</b>, puis clique « Je me suis porté volontaire » ici pour le suivi.</li>
       <li><b>Imprévus :</b> clique une case pour dire « je suis libre » (cours qui saute) ou « je ne suis pas disponible » (réunion, sortie que tu accompagnes). Les flèches ‹ › ou les touches ← → changent de semaine.</li>
@@ -538,7 +538,18 @@ const Nuage = (function () {
     window.addEventListener("online", () => { if (token()) { if (isDirty()) push(); else pull(); } });
     window.addEventListener("pagehide", () => { if (isDirty() && token()) { clearTimeout(timer); push(); } });
   }
-  return { init, changed, on: () => !!token() && state !== "cle" };
+  /* lecture d'un autre fichier du dépôt (ex. emploi du temps PRONOTE déposé par la tâche GitHub) */
+  async function readFile(name) {
+    if (!token()) return null;
+    const path = `/contents/${encodeURIComponent(name)}?ref=${BRANCH}`;
+    const r = await gh(path);
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (j.encoding === "base64" && j.content) return { sha: j.sha, text: b64dec(j.content) };
+    const raw = await gh(path, { headers: { "Accept": "application/vnd.github.raw+json" } });
+    return raw.ok ? { sha: j.sha, text: await raw.text() } : null;
+  }
+  return { init, changed, readFile, on: () => !!token() && state !== "cle" };
 })();
 
 </script>
@@ -812,7 +823,25 @@ async function importIcsFile(file){
     msg.textContent = "Ce fichier n'est pas un emploi du temps PRONOTE lisible. Dans PRONOTE : Mes données › Export au format ICal › Exporter.";
   }
 }
+/* emploi du temps récupéré automatiquement : la tâche GitHub dépose edt-pronote.ics dans le dépôt de synchro */
+const EDT_FILE = "edt-pronote.ics";
+let edtCheck = 0, edtBusy = false;
+async function autoEdt(force){
+  if (edtBusy || !Nuage.on() || (!force && Date.now() - edtCheck < 15*60000)) return;
+  edtBusy = true; edtCheck = Date.now();
+  try {
+    const f = await Nuage.readFile(EDT_FILE);
+    if (!f || (icsData && icsData.sha === f.sha)) return;
+    const data = parseIcs(f.text);
+    data.fileName = "PRONOTE (automatique)"; data.sha = f.sha; data.auto = true;
+    await saveIcs(data);
+    await syncRemplacements();
+    save(); render();
+  } catch(e){ /* fichier absent ou illisible : on garde l'emploi du temps actuel */ }
+  finally { edtBusy = false; }
+}
 function icsInfo(){
+  if (icsData && icsData.auto) return `Emploi du temps : mis à jour automatiquement depuis PRONOTE (dernière modification reçue le ${new Date(icsData.generated).toLocaleDateString("fr-FR")} à ${pad(new Date(icsData.generated).getHours())}h${pad(new Date(icsData.generated).getMinutes())}).`;
   if (!icsData) return "Emploi du temps : trame de ton Excel. Importe le fichier PRONOTE pour avoir les annulations, sorties et remplacements à jour.";
   const d = new Date(icsData.generated);
   const old = (Date.now() - d.getTime()) > 30*86400000;
@@ -1132,7 +1161,7 @@ function renderMine(){
 }
 
 function render(){
-  const ii = document.getElementById("icsInfo"); if (ii) { ii.textContent = icsInfo(); ii.classList.toggle("ics-old", !!icsData && (Date.now() - new Date(icsData.generated).getTime()) > 30*86400000); }
+  const ii = document.getElementById("icsInfo"); if (ii) { ii.textContent = icsInfo(); ii.classList.toggle("ics-old", !!icsData && !icsData.auto && (Date.now() - new Date(icsData.generated).getTime()) > 30*86400000); }
   renderHeader();
   const all = renderOffers();
   renderToday(all);
@@ -1625,7 +1654,7 @@ document.addEventListener("click", e => { if (e.target.closest("[data-act='gores
       try { if (icsData) localStorage.setItem(ICS_KEY, JSON.stringify(icsData)); else localStorage.removeItem(ICS_KEY); localStorage.setItem(STORE, snapshot()); } catch(e){}
       render();
     },
-    onSynced: () => { markBackup(); const b = document.getElementById("dbBanner"); if (/sauvegarde/i.test(b.textContent)) b.hidden = true; },
+    onSynced: () => { autoEdt(); markBackup(); const b = document.getElementById("dbBanner"); if (/sauvegarde/i.test(b.textContent)) b.hidden = true; },
     mount: document.getElementById("saveCard"),
     pillIn: document.querySelector(".top > div"),
     reveal: () => switchTab("mine")
